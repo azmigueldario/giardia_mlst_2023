@@ -23,7 +23,7 @@
 
 ## Accession numbers for available genomes (Checked on March 16, 2023)
 
-We are looking for short or long read whole genome data of G. duodenalis assemblages A or B. 
+We are looking for short or long read whole genome data of G. duodenalis assemblages A or B. Initial possible projects include:
 
 1. AACB00000000 / GCA_000002435.2 (Whole  genome of WB isolate (AI))  
 2. PRJNA280606 (BCCDC primary study)
@@ -43,7 +43,12 @@ BIOR_GENOMES="/project/60005/mdprieto/raw_data/giardia/biorepositories"
 
 # path to BCCDC genomes
 BC_GENOMES="/project/60005/mdprieto/raw_data/giardia/BCCDC"
+
+# singularity images
+PRODIGAL_IMG="/project/cidgoh-object-storage/images/prodigal_2.6.3.sif"
+CHEWBACCA_IMG="/project/cidgoh-object-storage/images/chewbacca_3.1.2.sif"
 ```
+
 
 ## Cedar Environment setup
 ```sh
@@ -62,10 +67,49 @@ BC_GENOMES="/project/60005/mdprieto/raw_data/giardia/BCCDC"
 
 - Searching genomes for _G. duodenalis_ in the European Nucleotide Archive (ENA), looking through projects
 - SRA search based on organism: _Giardia spp._ and excluding several sequencing platforms results in 215 hits. Search details below. 
-> ("giardia"[Organism] AND ("genomic"[Source] OR "other"[Source] OR "transcriptomic"[Source])) NOT ("abi solid"[Platform] OR "capillary"[Platform] OR "helicos"[Platform] OR "ls454"[Platform]) NOT ("amplicon"[Strategy] OR "rna seq"[Strategy]) 
+    + **("giardia"[Organism] AND ("genomic"[Source] OR "other"[Source] OR "transcriptomic"[Source])) NOT ("abi solid"[Platform] OR "capillary"[Platform] OR "helicos"[Platform] OR "ls454"[Platform]) NOT ("amplicon"[Strategy] OR "rna seq"[Strategy])** 
 - Downloaded SRR accession list with all available genomes to the project repo, contains data from paired end reads of assemblages A and B
 
-## 20230405 - 
+## 20230405 - Preparation for chewBACCA run
 
 - With the pipeline for NGS data download of nf-core [(nf-core/fetchngs)](https://nf-co.re/fetchngs), I retrieve the genomes from the ENA into eagle
+- Created a conda environment for the project in Eagle, just in case it is necessary
+- Then, having the fastq files for all available genomes I separate the metadata and raw files into those coming from the local study in the BCCDC and all others
+- Installed chewbacca singularity image from [depot.galaxy link](https://depot.galaxyproject.org/singularity/chewbbaca%3A3.1.2--pyhdfd78af_0)
+
+```sh
+# search patterns of a file B in file B, output the not matching lines
+grep -v -f fileB.txt fileA.txt > outputFile.txts
+
+# list of BCCDC accessions
+BCCDC_ACC="/project/60005/mdprieto/giardia_mlst_2023/accessions/ACC_BCCDC.txt"
+
+# create a text file with BCCDC data and move it 
+for file in $(cat to_move.txt); do mv "$file" /project/60005/mdprieto/raw_data/giardia/BCCDC/fastq; done
+
+#  install chewbacca image
+module load singularity
+cd ~/object_images
+singularity pull https://depot.galaxyproject.org/singularity/chewbbaca%3A3.1.2--pyhdfd78af_0
+
+```
+
+## 20230412 - Preparation for chewBACCA run
+
+chewBACCA requires training files for prodigal to identify CDS.
+
+- Training files can be produced with prodigal using a reference genome. Thus, I use a chromosome-level assembled genome for the WB strain of G. duodenalis as reference
+
+
+```sh
+# downloaded assemblage A reference genome
+cd TARGET_DIR
+wget https://ftp.ncbi.nlm.nih.gov/genomes/refseq/protozoa/Giardia_intestinalis/latest_assembly_versions/GCF_000002435.2_UU_WB_2.1/GCF_000002435.2_UU_WB_2.1_genomic.fna.gz
+wget https://ftp.ncbi.nlm.nih.gov/genomes/refseq/protozoa/Giardia_intestinalis/latest_assembly_versions/GCF_000002435.2_UU_WB_2.1/GCF_000002435.2_UU_WB_2.1_genomic.gff.gz
+```
+
+
+
+
+- 
 
