@@ -17,8 +17,10 @@
 ## Glossary
 
 - **dN/dS** - Nonsynonymous to synonymous, high when active selection and low when purifying selection
-- **P15, WB and GS** are commonly used reference strains/genomes. The GS isolate is an assemblage B parasite. 
+- **P15, WB and GS** are commonly used reference strains/genomes. The GS isolate is an assemblage B parasite, while the WB strain is the model assemblage A organism. 
 - **Pseudogenes** are regions with homology to a known gene or a possible ORF that lack a functional sequence necessary for transcription or have truncation or premature stop codons
+- **chewBACCA** is a freely available tool to call gene-by-gene typing schemes. Further information can be found in https://chewbbaca.readthedocs.io/en/latest/index.html
+- **prodigal** is a machine learning algorithm that uses a reference genome for an organism as training data to learn how to identify coding sequences (CDS) in other query genomes
 
 
 ## Accession numbers for available genomes (Checked on March 16, 2023)
@@ -99,6 +101,8 @@ singularity pull https://depot.galaxyproject.org/singularity/chewbbaca%3A3.1.2--
 chewBACCA requires training files for prodigal to identify CDS.
 
 - Training files can be produced with prodigal using a reference genome. Thus, I use a chromosome-level assembled genome for the WB strain of G. duodenalis as reference
+- I read the complete chewBACCA documentation to get familiar with the tool and the necessary dependencies and steps
+- Running preliminary createSchema process
 
 
 ```sh
