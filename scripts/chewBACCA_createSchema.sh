@@ -19,5 +19,6 @@ export SINGULARITY_BIND="/opt,/scratch,/etc,/project,/mnt"
 singularity exec $CHEWBACCA_IMG chewBBACA.py CreateSchema \
     -i $BC_GENOMES/fasta \
     -o /scratch/mdprieto/giardia_results/chew_createSchema \
+    --n giardia_wgmlst \
     --ptf /project/cidgoh-object-storage/database/reference_genomes/giardia/assemblage_A/giardia_wb.trn \
     --cpu 8
