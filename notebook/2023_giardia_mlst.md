@@ -100,10 +100,9 @@ singularity pull https://depot.galaxyproject.org/singularity/chewbbaca%3A3.1.2--
 
 chewBACCA requires training files for prodigal to identify CDS.
 
-- Training files can be produced with prodigal using a reference genome. Thus, I use a chromosome-level assembled genome for the WB strain of G. duodenalis as reference
-- I read the complete chewBACCA documentation to get familiar with the tool and the necessary dependencies and steps
-- Running preliminary createSchema process
-
+- Training files can be produced with prodigal using a reference genome. Thus, I use a chromosome-level assembled genome for the WB strain of _G. duodenalis_ as reference
+- Read the complete chewBACCA documentation to get familiar with the tool and the necessary dependencies and steps
+- Ran preliminary createSchema process
 
 ```sh
 # downloaded assemblage A reference genome
@@ -112,8 +111,8 @@ wget https://ftp.ncbi.nlm.nih.gov/genomes/refseq/protozoa/Giardia_intestinalis/l
 wget https://ftp.ncbi.nlm.nih.gov/genomes/refseq/protozoa/Giardia_intestinalis/latest_assembly_versions/GCF_000002435.2_UU_WB_2.1/GCF_000002435.2_UU_WB_2.1_genomic.gff.gz
 ```
 
+## 20230515 - 
 
-
-
-- 
-
+- Performed AlleleCall
+- Downloaded **checkm2** singularity image and prepared necessary database
+- Created **assembly_qc** script to analyze BCCDC genomes
