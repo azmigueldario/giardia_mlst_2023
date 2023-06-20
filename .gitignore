@@ -215,4 +215,5 @@ cython_debug/
 *.tax2010
 *.vcf
 *.xml
-*data
+*raw_data
+
