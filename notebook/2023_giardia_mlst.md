@@ -48,7 +48,7 @@ BC_GENOMES="/project/60005/mdprieto/raw_data/giardia/BCCDC"
 
 # singularity images
 PRODIGAL_IMG="/project/cidgoh-object-storage/images/prodigal_2.6.3.sif"
-CHEWBACCA_IMG="/project/cidgoh-object-storage/images/chewbacca_3.1.2.sif"
+CHEWBACCA_IMG="/mnt/cidgoh-object-storage/images/chewbacca_3.1.2.sif"
 ```
 
 
@@ -65,7 +65,7 @@ CHEWBACCA_IMG="/project/cidgoh-object-storage/images/chewbacca_3.1.2.sif"
 - Defined a preliminary workflow for QC-Assembly-Annotation in a .ppt file  
         - QC of assembly by backtracking mapping to reference genomes  
 
-## 20230316 - Obtain relevant genomes available
+## 20230316 - Obtain available relevant genomes
 
 - Searching genomes for _G. duodenalis_ in the European Nucleotide Archive (ENA), looking through projects
 - SRA search based on organism: _Giardia spp._ and excluding several sequencing platforms results in 215 hits. Search details below. 
@@ -84,13 +84,13 @@ CHEWBACCA_IMG="/project/cidgoh-object-storage/images/chewbacca_3.1.2.sif"
 grep -v -f fileB.txt fileA.txt > outputFile.txts
 
 # list of BCCDC accessions
-BCCDC_ACC="/project/60005/mdprieto/giardia_mlst_2023/accessions/ACC_BCCDC.txt"
+BCCDC_ACC="/project/60006/mdprieto/giardia_mlst_2023/processed_data/ACC_BCCDC.txt"
 
 # create a text file with BCCDC data and move it 
 for file in $(cat to_move.txt); do mv "$file" /project/60005/mdprieto/raw_data/giardia/BCCDC/fastq; done
 
 #  install chewbacca image
-module load singularity
+module load apptainer
 cd ~/object_images
 singularity pull https://depot.galaxyproject.org/singularity/chewbbaca%3A3.1.2--pyhdfd78af_0
 
@@ -111,8 +111,39 @@ wget https://ftp.ncbi.nlm.nih.gov/genomes/refseq/protozoa/Giardia_intestinalis/l
 wget https://ftp.ncbi.nlm.nih.gov/genomes/refseq/protozoa/Giardia_intestinalis/latest_assembly_versions/GCF_000002435.2_UU_WB_2.1/GCF_000002435.2_UU_WB_2.1_genomic.gff.gz
 ```
 
-## 20230515 - 
+## 20230515 - Advances
 
 - Performed AlleleCall
 - Downloaded **checkm2** singularity image and prepared necessary database
 - Created **assembly_qc** script to analyze BCCDC genomes
+
+## 20230620
+
+- After training for a while in nextflow to optimize pipeline, ready to give it a go once again
+- In a previous meeting, Jimmy Liu suggested to divide randomly (cross-validation) my genomes into training and testing 
+    - I will create a Nextflow pipeline to quickly do it.
+- Also, as fastqc, trimming, trimmed_fastqc, shovill assembly, and assembly qc(checkm and quast) is something I do repeatedly, I will implement also a nextflow pipeline
+    - I created a draft of the complete pipeline and started developing (check CIDGOH QC and nf-seqqc pipeline as template) 
+- First step is to unify assembly and QC pipeline for all isolates 
+    - Raw data in `fastq` format is already available in my environment as I obtained it from NCBI
+
+## 20230621 
+
+- Created an input samplesheet for the pipeline using the following command
+
+```sh
+    # add header line
+echo "sample,read1,read2" > input_samplesheet.csv
+
+for read1 in $(ls /home/mdprieto/mdprieto_projects/raw_data/giardia/{BCCDC,repositories}/fastq/*_1.fastq.gz);
+    do 
+        # get the basename of file and remove suffix
+    sample_id=$(echo $read1 | xargs -n 1 basename -s '_1.fastq.gz')
+        # replace string '_1' for '_2'
+    read2="${read1/_1/_2}"
+        # write in a new line for each sample
+    echo $sample_id,$read1,$read2 >> input_samplesheet.csv
+    done
+```
+- Started designing nextflow pipeline to run all chewbacca automatically
+- 
