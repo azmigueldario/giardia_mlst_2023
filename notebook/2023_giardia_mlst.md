@@ -193,3 +193,10 @@ for read1 in $(ls /home/mdprieto/mdprieto_projects/raw_data/giardia/{BCCDC,repos
 conda create -n sklearn_env -c conda-forge scikit-learn pandas
 conda activate sklearn_env
 ```
+
+- Created first instance of python script to divide dataset into test/training,
+  and do it 'n' times according to cross-validation
+    - Got more familiar with the usage of `argparse` module to parse arguments
+      provided to the script in the command line
+- Drafted preliminary `main.nf` for chewBACCA pipeline
+
