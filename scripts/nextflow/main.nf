@@ -15,6 +15,13 @@ params.outdir="$launchDir"
 
 //---------- Processes
 
+
+process SUBSET_CROSS_VALIDATION {
+    container 
+    label 'low'
+    publishDir "${params.outdir}/", mode: 'symlink'
+}
+
 process CHEW:ALLELE_CALL{
     tag "Processing $sample_id"
     container 
