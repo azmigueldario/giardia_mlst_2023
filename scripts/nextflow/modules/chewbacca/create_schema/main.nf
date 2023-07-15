@@ -76,7 +76,7 @@ process CHEWBACCA_EXTRACT_CGMLST {
         chewBBACA.py RemoveGenes \
             -i $results_AlleleCall/results_alleles.tsv \
             -g $results_AlleleCall/paralogous_counts.tsv \
-            -o results_no_paralogs.tsv
+            -o results_no_paralogs.tsvq
         """
 }
 chewBBACA.py ExtractCgMLST \

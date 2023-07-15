@@ -7,11 +7,7 @@ import argparse
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-# user defined inputs
-directory = '../processed_data/cross_validation'
-n = 10 
-
-# define parsing of arguments from command line
+# ---------------------------------- define parsing of arguments from command line
 #def parse_arguments():
 """Reads arguments from the command line for my script."""
 
@@ -27,13 +23,16 @@ parser.add_argument("input_file",
                     help="path [absolute/relative] to an input dataset in .csv format")
 
 args = parser.parse_args()
-print (args.test_proportion)
 
+# user defined inputs
+directory = args.output_dir
+n = args.number_iterations 
 
 # sanity check for arguments
 if args.test_proportion > 1 or args.test_proportion < 0:
     raise ValueError('--test_proportion must be between 0 and 1.')
 
+# ---------------------------------  define function
 
 def n_fold_split():
     """ This function takes a '.csv' data file as input. It divides it into 'training' and 'testing' datasets
@@ -42,7 +41,7 @@ def n_fold_split():
     """
 
     # read dataset
-    df = pd.read_csv(r'../processed_data/input_samplesheet.csv',
+    df = pd.read_csv(f'{args.input_file}',
                 header=0)
 
     # create output_dir if it does not exist
@@ -53,10 +52,13 @@ def n_fold_split():
     for i in range(1, (n+1)):
         
         train, test = train_test_split (df,
-                                        test_size=0.2)
+                                        test_size=args.test_proportion)
 
-        train.to_csv(f'../processed_data/cross_validation/train_set_{i}.csv')
-        test.to_csv(f'../processed_data/cross_validation/test_set_{i}.csv')
+        train.to_csv(f'{args.output_dir}/train_set_{i}.csv')
+        test.to_csv(f'{args.output_dir}/test_set_{i}.csv')
+
+        #if args.merge_results:
+
 
 
 # run when script is called from CLI using 'python3 script.py'
