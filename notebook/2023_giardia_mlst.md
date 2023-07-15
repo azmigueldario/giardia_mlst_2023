@@ -200,3 +200,27 @@ conda activate sklearn_env
       provided to the script in the command line
 - Drafted preliminary `main.nf` for chewBACCA pipeline
 
+## 20230711 - Creating input channels for cross-validation
+
+- Different ideas to classify reads as input channels
+    - Have a long format with columns {...set1,set2,set3,...setn} and divide
+      them by hardcoding what column will be kept as train/test identifier
+    - Use a long format and just filter based on the value contained in the set
+      column
+    - Create a custom groovy script that maps the samples however I want them
+
+## 20230713 - Developing workflow
+
+- Created new samplesheet that contains contigs only, that is necessary as input for chewbacca
+
+```sh
+echo "sample,contig" > input_samplesheet_contig.csv
+
+for contig in $(ls /home/mdprieto/mdprieto_projects/raw_data/giardia/{BCCDC,repositories}/fasta/*fasta);
+    do 
+        # get the basename of file and remove suffix
+    sample_id=$(echo $contig | xargs -n 1 basename -s '_FINAL.contigs.polished.fasta')
+        # write in a new line for each sample
+    echo $sample_id,$contig >> input_samplesheet_contig.csv
+    done
+```
