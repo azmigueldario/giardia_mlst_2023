@@ -212,6 +212,9 @@ conda activate sklearn_env
 ## 20230713 - Developing workflow
 
 - Created new samplesheet that contains contigs only, that is necessary as input for chewbacca
+- Prepared question about how to approach cross-validation for nextflow forum. I have thought about several ideas but have no final solution and do not want to stale advances anymore.
+    - Includes a sample_sheet in long or wide format, any approach would work and a sample of processes to run.
+- Created a draft of processes to run in ChewBACCA
 
 ```sh
 echo "sample,contig" > input_samplesheet_contig.csv
