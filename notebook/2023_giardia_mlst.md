@@ -62,6 +62,9 @@ BC_GENOMES="/project/60005/mdprieto/raw_data/giardia/BCCDC"
 # singularity images
 PRODIGAL_IMG="/project/cidgoh-object-storage/images/prodigal_2.6.3.sif"
 CHEWBACCA_IMG="/mnt/cidgoh-object-storage/images/chewbacca_3.1.2.sif"
+
+# request interactive session for development
+salloc --time=1:30:00 --ntasks=1 --cpus-per-task=6  --mem-per-cpu=4G 
 ```
 
 
@@ -227,3 +230,12 @@ for contig in $(ls /home/mdprieto/mdprieto_projects/raw_data/giardia/{BCCDC,repo
     echo $sample_id,$contig >> input_samplesheet_contig.csv
     done
 ```
+
+## 20230717 - Developing workflow: adjusting python script for test/sample split
+
+Modified python script to produce consolidated long and wide format `.csv`. The new script produces results in long or wide format too. 
+  - Used pandas library to handle dataframes in comma separated files
+    - `pd.assign` lets me add aditional columns of variables
+    - `dataset.loc[dataset[var]==condition]` is helpful to evaluate a condition and modify a value inside the dataframe
+    - For string interpolation in __Python__ I have to remember to use `f'string{replacement}'`
+ 

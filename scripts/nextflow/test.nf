@@ -6,19 +6,30 @@ Channel
     .fromPath(params.input_file)
     .splitCsv(header: true)
     .branch{ row ->
-        set1: row.set1 == "train"
+        set1: row.set1_train == "train"
             return tuple(row.sample, "set1", tuple(row.read1, row.read2))
-        set2: row.set2 == "train"
-            return tuple(row.sample, "set2", tuple(row.read1, row.read2))  
+        set2: row.set1_test == "test"
+            return tuple(row.sample, "set1", tuple(row.read1, row.read2))  
     }
     .set{test_ch}
 
 test_ch.set1.view{it}
 test_ch.set2.view{it}
 
-*/
-params.input_file = "../../processed_data/cross_validation_input/pilot_cv.csv"
 
+// input every file individually and run the pipeline 10 times
+
+Channel
+    .fromPath('path/to/set1_train.csv')
+    .splitCsv(header: true)
+    .map {row -> tuple(row.sample_id, row.set, row.contig) }
+    .set {train_files_ch}
+
+Channel
+    .fromPath('path/to/set1_test.csv')
+    .splitCsv(header: true)
+    .map {row -> tuple(row.sample_id, row.set, row.contig) }
+    .set {test_files_ch}
 
 // Groovy function to create channels
 def create_channels(LinkedHashMap row) {
@@ -46,3 +57,16 @@ def create_channels(LinkedHashMap row) {
     }
     return fastq_meta
 }
+
+*/
+
+params.input_file = "../../processed_data/cross_validation_input/pilot_cv.csv"
+
+Channel
+    .fromPath(params.input_file)
+    .splitCsv(header: true)
+    .branch { line -> 
+            set1: 
+            tuple(row.sample, "set1", row.set1, row.contig) 
+            set2: tuple}
+    .view()
