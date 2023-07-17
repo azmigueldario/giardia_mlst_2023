@@ -1,0 +1,12 @@
+sample,contig,set1,set2
+ATCC30888_13,/home/mdprieto/mdprieto_projects/raw_data/giardia/BCCDC/fasta/ATCC30888_13_FINAL.contigs.polished.fasta,train,train
+ATCC30957_120_1,/home/mdprieto/mdprieto_projects/raw_data/giardia/BCCDC/fasta/ATCC30957_120_1_FINAL.contigs.polished.fasta,train,test
+ATCC30957_120_2,/home/mdprieto/mdprieto_projects/raw_data/giardia/BCCDC/fasta/ATCC30957_120_2_FINAL.contigs.polished.fasta,test,train
+ATCC30957_120_3,/home/mdprieto/mdprieto_projects/raw_data/giardia/BCCDC/fasta/ATCC30957_120_3_FINAL.contigs.polished.fasta,train,train
+ATCC50163_89,/home/mdprieto/mdprieto_projects/raw_data/giardia/BCCDC/fasta/ATCC50163_89_FINAL.contigs.polished.fasta,train,test
+ATCC50170_93,/home/mdprieto/mdprieto_projects/raw_data/giardia/BCCDC/fasta/ATCC50170_93_FINAL.contigs.polished.fasta,train,train
+B5_19,/home/mdprieto/mdprieto_projects/raw_data/giardia/BCCDC/fasta/B5_19_FINAL.contigs.polished.fasta,test,train
+BTW_109_2015FL,/home/mdprieto/mdprieto_projects/raw_data/giardia/BCCDC/fasta/BTW_109_2015FL_FINAL.contigs.polished.fasta,train,train
+CB2_108_108_2015FL,/home/mdprieto/mdprieto_projects/raw_data/giardia/BCCDC/fasta/CB2_108_108_2015FL_FINAL.contigs.polished.fasta,train,test
+CIS_119,/home/mdprieto/mdprieto_projects/raw_data/giardia/BCCDC/fasta/CIS_119_FINAL.contigs.polished.fasta,test,train
+D3_18,/home/mdprieto/mdprieto_projects/raw_data/giardia/BCCDC/fasta/D3_18_FINAL.contigs.polished.fasta,train,train
