@@ -17,6 +17,24 @@
 		+ High Cysteine Membrane proteins (HCMP)  
 		+ Protein 21.1
 
+## Project directory structure
+
+As usual, the project is divided in four main subdirectories and inside a github repository (https://github.com/azmigueldario/giardia_mlst_2023)
+
+  - __notebook:__ contains the _markdown_ file that documents all the advances and troubleshooting. It also contains a graph summarizing the analytical pipeline
+  - __output:__ contains all results from analysis
+  - __processed_data:__ is where all input samplesheets, input datasets, and relevant information to run the pipeline are located. The _raw data_ for this project is saved outside the repository. 
+  - __scripts:__ contains all analytical scripts and workflows developed for this project
+
+```sh
+.
+├── notebook
+├── output
+├── processed_data
+│   └── cross_validation_input
+└── scripts
+```
+
 ## Glossary
 
 - **dN/dS** - Nonsynonymous to synonymous, high when active selection and low
@@ -64,7 +82,7 @@ PRODIGAL_IMG="/project/cidgoh-object-storage/images/prodigal_2.6.3.sif"
 CHEWBACCA_IMG="/mnt/cidgoh-object-storage/images/chewbacca_3.1.2.sif"
 
 # request interactive session for development
-salloc --time=1:30:00 --ntasks=1 --cpus-per-task=6  --mem-per-cpu=4G 
+salloc --time=02:00:00 --ntasks=1 --cpus-per-task=6  --mem-per-cpu=4G 
 ```
 
 
@@ -238,4 +256,46 @@ Modified python script to produce consolidated long and wide format `.csv`. The 
     - `pd.assign` lets me add aditional columns of variables
     - `dataset.loc[dataset[var]==condition]` is helpful to evaluate a condition and modify a value inside the dataframe
     - For string interpolation in __Python__ I have to remember to use `f'string{replacement}'`
+  - A new pilot dataset is created using head of the main dataset `df.head(20)` and then doing the random subsampling
+ 
+Still working on setting up the right way to feed all data for cross-validation into ChewBACCA
+  - Created a `input_channels.nf` file to test the pipeline in a subset of the data
+
+```nf
+// Using branch and setting according to match in set column
+
+Channel
+    .fromPath(params.input_file)
+    .splitCsv(header: true)
+    .branch { row -> 
+            set1: row.set == "set1"
+                tuple(row.sample, row.set, row.value, row.contig) 
+            set2: row.set == "set2"
+                tuple(row.sample, row.set, row.value, row.contig) 
+            set3: row.set == "set3"
+                tuple(row.sample, row.set, row.value, row.contig) 
+                }
+    .set{fasta_ch}
+
+```
+__Split csv file in number of lines but keeping header__
+
+```sh
+tail -n +2 INPUT_FILE | split -l 4 - prefix_
+for file in prefix_*
+do
+    head -n 1 INPUT_FILE > tmp_file
+    cat $file >> tmp_file
+    mv -f tmp_file $file
+done
+```
+
+## 20230717 - Developing workflow: setup initial process for prodigal training
+
+- When setting up a pipeline with **Singularity** in nextflow, I have to add the following parameters to the `nextflow.config` file to create the mounting environment to execute the code and to load singularity
+    > singularity.enabled = true
+    > singularity.autoMounts = true
+- Defined process to create prodigal training file
+- Decided to create a working pipeline with a single csv input and repeat it ten times. Once I am more proficient with nextflow I can come back and improve upon it. 
+
  
