@@ -218,6 +218,7 @@ cython_debug/
 *raw_data
 
 ###################################################
-############### Ignore Nextflow associated files
+############### Ignore Nextflow and testing files
 
 *.nextflow*
+*cross_validation_input*
