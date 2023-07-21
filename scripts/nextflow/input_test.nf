@@ -33,6 +33,7 @@ process PRODIGAL_TRAINING {
 
 }
 
+/*
 process CREATE_SET_CHANNELS{
 
     input:
@@ -58,7 +59,7 @@ process CREATE_SET_CHANNELS{
     set_ch.train.view()
     """
 }
-
+*/
 
 workflow{
     
@@ -72,34 +73,18 @@ workflow{
                      return tuple(it.sample, it.set, it.contig)}
         .set{set_ch}
 
-    set_ch
-        .train
+    set_ch.train
         .map{it[2]}
-        .collect()
-        .view() 
+        .take (40)
+        .collect().flatten()
+
+    //test groupTuple
+    csv_channel
+        .splitCsv(header:true)
+        .map {return tuple(it.set, it.contig)}
+        .groupTuple()
+        .view()
+    //set_ch.train.groupTuple{}
 
     //ref_genome_ch.view(); csv_channel.view(); training_ch.view()
 }
-
-
-/*
-
-// branch into train/test
-
-csv_channel
-    .splitCsv(header:true)
-    .branch {   train: it.value == "train"
-                    return tuple(it.sample, it.set, it.contig)
-                test: it.value == "test"
-                    return tuple(it.sample, it.set, it.contig)}
-    .set{set_ch}
-
-//using multimap
-
-def criteria_sets = multiMapCriteria {
-    set1: it.set == "set1"
-    set2: it.set == "set2"
-    set3: it.set == "set3"
-}
-
-*/

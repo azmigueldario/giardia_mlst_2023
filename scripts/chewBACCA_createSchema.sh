@@ -1,6 +1,6 @@
 #!/bin/bash                                 
 #SBATCH --mem-per-cpu=6G                   
-#SBATCH --time=01:30:00                     
+#SBATCH --time=03:00:00                     
 #SBATCH --cpus-per-task=8                  
 #SBATCH --job-name="chewBACCA_createSchema_giardia"     
 #SBATCH --chdir=/scratch/mdprieto/          

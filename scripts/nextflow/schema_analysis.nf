@@ -20,7 +20,7 @@ process PRODIGAL_TRAINING {
     tuple val(organism), path (ref_genome)
 
     output:
-    tuple val(organism), path ("*.trn")
+    tuple val(organism), path ("*.trn"),    emit: training_file
 
     script:
     """
@@ -29,8 +29,67 @@ process PRODIGAL_TRAINING {
         -t giardia_wb.trn \
         -p single
     """
+}
+
+process TEST_CREATE_SCHEMA {
+    //publishDir "${params.outdir}", mode: 'copy'
+    cache 'lenient'
+    container "https://depot.galaxyproject.org/singularity/chewbbaca%3A3.2.0--pyhdfd78af_0"
+    debug true
+
+    input:
+    path(contigs_test)
+
+    script:
+    """
+    realpath $contigs_test > contigs_input.txt
+    cat contigs_input.txt
+    """
+}
+
+process CHEWBACCA_CREATE_SCHEMA {
+    //publishDir "${params.outdir}", mode: 'copy'
+    cache 'lenient'
+    container "https://depot.galaxyproject.org/singularity/chewbbaca%3A3.2.0--pyhdfd78af_0"
+
+    input:
+    path(contigs_test)
+    tuple val(organism), path (training_file)
+    
+    output:
+    path("wgmlst_schema")
+
+    script:
+    """
+    realpath $contigs_test > contigs_input.txt
+    cat contigs_input.txt
+
+
+    chewBBACA.py CreateSchema \
+        -i $contigs_test -o wgmlst_schema --ptf $training_file --cpu $task.cpus
+    """
+}
+
+workflow{
+    // create contigs_channel
+    csv_channel
+        .splitCsv(header:true)
+        .branch { 
+            train: it.value == "train"
+                return it.contig
+            test: it.value == "test"
+                return it.contig  }
+        .set{contigs_channel}
+
+    training_ch = PRODIGAL_TRAINING(ref_genome_ch)
+    
+    TEST_CREATE_SCHEMA(contigs_channel.test.flatten().collect())
+    //CHEWBACCA_CREATE_SCHEMA(contigs_channel.test.collect(), training_ch)
 
 }
+
+/*
+//-------- SNIPPETS TO TRY
 
 process CREATE_SET_CHANNELS{
 
@@ -58,39 +117,5 @@ process CREATE_SET_CHANNELS{
     """
 }
 
-process CHEWBACCA_CREATE_SCHEMA {
-    publishDir "${params.outdir}", mode: 'copy'
-    cache 'lenient'
-    cpus params.threads
 
-    input:
-        tuple val(sample_id), val(set), path(contig), val(train_test)
-        path (prodigal_training)
-    
-    output:
-        path("wgmlst_schema")
-
-    script:
-        """
-        chewBBACA.py CreateSchema \
-            -i $contigs.test -o $wgmlst_schema --ptf $traing_file --cpu $task.cpus
-        """
-}
-
-
-workflow{
-    
-    training_ch = PRODIGAL_TRAINING(ref_genome_ch)
-
-    csv_channel
-        .splitCsv(header:true)
-        .branch {train: it.value == "train"
-                     return tuple(it.sample, it.set, it.contig)
-                 test: it.value == "test"
-                     return tuple(it.sample, it.set, it.contig)}
-        .set{set_ch}
-
-    set_ch.train.view()
-
-    //ref_genome_ch.view(); csv_channel.view(); training_ch.view()
-}
+*/
