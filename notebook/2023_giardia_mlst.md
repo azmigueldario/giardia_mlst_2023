@@ -297,5 +297,8 @@ done
     > singularity.autoMounts = true
 - Defined process to create prodigal training file
 - Decided to create a working pipeline with a single csv input and repeat it ten times. Once I am more proficient with nextflow I can come back and improve upon it. 
+- For the CreateSchema and probably other processes, I need to `collect().flatten()` the contigs to feed them and I still do not know how to do it
+  - Singularity image is not pulling correctly from 'https://depot.galaxyproject.org/singularity/chewbbaca%3A3.2.0--pyhdfd78af_0' must use manually
+  > singularity pull depot.galaxyproject.org-singularity-chewbbaca%3A3.2.0--pyhdfd78af_0.img https://depot.galaxyproject.org/singularity/chewbbaca%3A3.2.0--pyhdfd78af_0
 
  
