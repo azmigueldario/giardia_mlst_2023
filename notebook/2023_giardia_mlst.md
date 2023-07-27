@@ -63,6 +63,12 @@ assemblages A or B. Initial possible projects include:
 3. JXTI00000000 (primary assembly SE reads using 454 technology)
 4. [SAMN12878171](https://www.ebi.ac.uk/ena/browser/view/SAMN12878171)  
 
+# Objectives
+
+1. Find and retrieve all available genomes for Giardia intestinalis (Assemblages A and B)
+2. Create a robust core-genome MLST scheme for future epidemiological analysis of outbreaks
+    - Cross-validation of results given the small number of available datasets
+
 # Analysis pipeline
 
 ## Eagle Environment setup
@@ -82,7 +88,7 @@ PRODIGAL_IMG="/project/cidgoh-object-storage/images/prodigal_2.6.3.sif"
 CHEWBACCA_IMG="/mnt/cidgoh-object-storage/images/chewbacca_3.1.2.sif"
 
 # request interactive session for development
-salloc --time=02:00:00 --ntasks=1 --cpus-per-task=6  --mem-per-cpu=4G 
+salloc --time=02:00:00 --ntasks=1 --cpus-per-task=6  --mem-per-cpu=6G 
 ```
 
 
@@ -299,6 +305,20 @@ done
 - Decided to create a working pipeline with a single csv input and repeat it ten times. Once I am more proficient with nextflow I can come back and improve upon it. 
 - For the CreateSchema and probably other processes, I need to `collect().flatten()` the contigs to feed them and I still do not know how to do it
   - Singularity image is not pulling correctly from 'https://depot.galaxyproject.org/singularity/chewbbaca%3A3.2.0--pyhdfd78af_0' must use manually
-  > singularity pull depot.galaxyproject.org-singularity-chewbbaca%3A3.2.0--pyhdfd78af_0.img https://depot.galaxyproject.org/singularity/chewbbaca%3A3.2.0--pyhdfd78af_0
+  > singularity pull depot.galaxyproject.org-singularity-chewbbaca%3A3.2.0--pyhdfd78af_0.img https://depot.galaxyproject.org/singularity/chewbbaca%3A3.2.0--pyhdfd78af_0\
+- Had a succesful run of a pilot with the initial processes
+
+## 20230726 
+
+- Added output directory to process, optimized writing of first two processes
+```sh
+CSV_FILE="/project/60006/mdprieto/giardia_mlst_2023/processed_data/cross_validation_input/split_aa"
+
+nextflow run /project/60006/mdprieto/giardia_mlst_2023/scripts/nextflow/test.nf \
+    -resume \
+    -profile singularity \
+    --csv_files $CSV_FILE
+```
+
 
  
