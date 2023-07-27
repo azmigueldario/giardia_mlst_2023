@@ -34,16 +34,17 @@ process PRODIGAL_TRAINING {
 
     script:
     """
-        prodigal \
-            -i $ref_genome \
-            -t ${organism}.trn \
-            -p single
+    prodigal \
+        -i $ref_genome \
+        -t ${organism}.trn \
+        -p single
     """
 }
 
 process CHEWBACCA_CREATE_SCHEMA {
-    label "process_medium"
-    publishDir "${params.outdir}/${set_id}", mode: 'copy'
+    //label "process_medium"
+    cpus 8
+    // publishDir "${params.outdir}/${set_id}", mode: 'copy'
     cache 'lenient'
     container "https://depot.galaxyproject.org/singularity/chewbbaca%3A3.2.0--pyhdfd78af_0"
 
@@ -53,14 +54,17 @@ process CHEWBACCA_CREATE_SCHEMA {
     
     output:
     tuple val(set_id), path("wgmlst_schema"), path('test_contigs_input.txt')
-
+    
     script:
     """
-        echo $contigs_test | tr -s ' ' '\n' > test_contigs_input.txt
-        cat test_contigs_input.txt
+        # creates a file with one contig absolute path per line
+    echo $contigs_test | tr -s ' ' '\n' > test_contigs_input.txt
 
-        chewBBACA.py CreateSchema \
-            -i test_contigs_input.txt -o wgmlst_schema --ptf $training_file --cpu $task.cpus
+    chewBBACA.py CreateSchema \
+        -i test_contigs_input.txt \
+        -o wgmlst_schema \
+        --ptf $training_file \
+        --cpu $task.cpus
     """
 }
 
@@ -71,19 +75,40 @@ process CHEWBACCA_ALLELE_CALL {
     container "https://depot.galaxyproject.org/singularity/chewbbaca%3A3.2.0--pyhdfd78af_0"
 
     input:
-        tuple val(set_id), path(wgmlst_schema), path(test_contigs)
+    tuple val(set_id), path (contigs_test)
+    tuple val(set_id), path(wgmlst_schema), path(test_contigs)
     
     output:
-        tuple val(set_id), path("results_AlleleCall")
+    tuple val(set_id), path("results_AlleleCall")
 
     script:
-        """
-        chewBBACA.py AlleleCall \
-            -i $test_contigs \
-            -g $wgmlst_schema/schema_seed \
-            -o results_AlleleCall \
-            --cpu $task.cpus
-        """
+    """
+    chewBBACA.py AlleleCall \
+        -i $test_contigs \
+        -g $wgmlst_schema/schema_seed \
+        -o results_AlleleCall \
+        --cpu $task.cpus
+    """
+}
+
+process CHEWBACCA_REMOVE_PARALOGS {
+    label 'process_low'
+    publishDir "${params.outdir}/${set_id}", mode: 'copy'
+    cache 'lenient'
+
+    input:
+    tuple val(set_id), path(results_AlleleCall)
+    
+    output:
+    tuple val(set_id), path("results_no_paralogs**")
+
+    script:
+    """
+    chewBBACA.py RemoveGenes \
+        -i $results_AlleleCall/results_alleles.tsv \
+        -g $results_AlleleCall/paralogous_counts.tsv \
+        -o results_no_paralogs_${set_id}.tsv
+    """
 }
 
 workflow{
@@ -98,10 +123,14 @@ workflow{
     contigs_channel.train
         .take(20)
         .groupTuple().set{ train_channel }
-
+    
+    contigs_channel.test
+        .take(5)
+        .groupTuple().set{ test_channel }
+    
     training_ch = PRODIGAL_TRAINING(ref_genome_ch)
     wgmlst_ch   = CHEWBACCA_CREATE_SCHEMA(train_channel, training_ch)
-    //CHEWBACCA_ALLELE_CALL(wgmlst_ch)
+    CHEWBACCA_ALLELE_CALL(wgmlst_ch, train_channel)
     }
 
 
@@ -181,5 +210,10 @@ process CHEWBACCA_EXTRACT_CGMLST {
 chewBBACA.py ExtractCgMLST \
     -i $results_no_paralogs \
     -o results32_wgMLST/cgMLST
+
+// ------------- Mix training and testing datasets once again
+train_channel
+    .join(test_channel, by: 0, failOnDuplicate: true, failOnMismatch: true)
+    .view()
 
 */
