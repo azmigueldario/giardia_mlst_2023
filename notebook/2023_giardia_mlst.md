@@ -311,10 +311,15 @@ done
 ## 20230726 
 
 - Added output directory to process, optimized writing of first two processes
+- Improved nextflow.config to parametrize resources for each process
+- Updated definitions of output
+- Currently testing AlleleCall and RemoveParalogs processes
+
 ```sh
 CSV_FILE="/project/60006/mdprieto/giardia_mlst_2023/processed_data/cross_validation_input/split_aa"
+GIARDIA_NXF="/project/60006/mdprieto/giardia_mlst_2023/scripts/nextflow"
 
-nextflow run /project/60006/mdprieto/giardia_mlst_2023/scripts/nextflow/test.nf \
+nextflow run $GIARDIA_NXF/draft.nf \
     -resume \
     -profile singularity \
     --csv_files $CSV_FILE
