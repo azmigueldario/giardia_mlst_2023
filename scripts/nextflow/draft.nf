@@ -12,7 +12,7 @@
 params.csv_files    = '../../processed_data/cross_validation_input/split_aa'
 params.ref_genome   = "/mnt/cidgoh-object-storage/database/reference_genomes/giardia/assemblage_A/GCF_000002435.2_UU_WB_2.1_genomic.fna"
 params.organism     = "giardia_duodenalis"
-params.outdir       = "$launchDir/results"
+params.outdir       = "/scratch/mdprieto/results"//"$launchDir/results"
 
 // Create channels
 
@@ -44,7 +44,7 @@ process PRODIGAL_TRAINING {
 process CHEWBACCA_CREATE_SCHEMA {
     //label "process_medium"
     cpus 8
-    // publishDir "${params.outdir}/${set_id}", mode: 'copy'
+    publishDir "${params.outdir}/${set_id}", mode: 'copy'
     cache 'lenient'
     container "https://depot.galaxyproject.org/singularity/chewbbaca%3A3.2.0--pyhdfd78af_0"
 
@@ -75,8 +75,8 @@ process CHEWBACCA_ALLELE_CALL {
     container "https://depot.galaxyproject.org/singularity/chewbbaca%3A3.2.0--pyhdfd78af_0"
 
     input:
-    tuple val(set_id), path (contigs_test)
     tuple val(set_id), path(wgmlst_schema), path(test_contigs)
+    tuple val(set_id), path (contigs_test)
     
     output:
     tuple val(set_id), path("results_AlleleCall")
