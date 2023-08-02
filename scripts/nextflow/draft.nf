@@ -91,7 +91,7 @@ process CHEWBACCA_ALLELE_CALL {
     """
 }
 
-process CHEWBACCA_REMOVE_PARALOGS {
+process REMOVE_PARALOGS {
     label 'process_low'
     publishDir "${params.outdir}/${set_id}", mode: 'copy'
     cache 'lenient'
@@ -111,6 +111,27 @@ process CHEWBACCA_REMOVE_PARALOGS {
     """
 }
 
+process EXTRACT_CGMLST {
+    publishDir "${params.outdir}", mode: 'copy'
+    cache 'lenient'
+    cpus params.threads
+
+    input:
+        tuple val(sample_id), val(set), path(contig), val(train_test)
+        path (results_no_paralogs)
+    
+    output:
+        path(cg)
+
+    script:
+        """
+        chewBBACA.py RemoveGenes \
+            -i $results_AlleleCall/results_alleles.tsv \
+            -g $results_AlleleCall/paralogous_counts.tsv \
+            -o results_no_paralogs.tsvq
+        """
+}
+
 workflow{
     csv_channel
         .splitCsv(header:true)
@@ -128,9 +149,11 @@ workflow{
         .take(5)
         .groupTuple().set{ test_channel }
     
-    training_ch = PRODIGAL_TRAINING(ref_genome_ch)
-    wgmlst_ch   = CHEWBACCA_CREATE_SCHEMA(train_channel, training_ch)
-    CHEWBACCA_ALLELE_CALL(wgmlst_ch, train_channel)
+    training_ch     = PRODIGAL_TRAINING(ref_genome_ch)
+    wgmlst_ch       = CHEWBACCA_CREATE_SCHEMA(train_channel, training_ch)
+    wgmlst_schema   = CHEWBACCA_ALLELE_CALL(wgmlst_ch, train_channel)
+    REMOVE_PARALOGS(wgmlst_schema)
+
     }
 
 
