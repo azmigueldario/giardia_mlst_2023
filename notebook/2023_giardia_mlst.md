@@ -23,7 +23,8 @@ As usual, the project is divided in four main subdirectories and inside a github
 
   - __notebook:__ contains the _markdown_ file that documents all the advances and troubleshooting. It also contains a graph summarizing the analytical pipeline
   - __output:__ contains all results from analysis
-  - __processed_data:__ is where all input samplesheets, input datasets, and relevant information to run the pipeline are located. The _raw data_ for this project is saved outside the repository. 
+  - __processed_data:__ is where all input samplesheets, input datasets, and relevant information to run the pipeline are located. 
+      - **NOTE:** The _raw data_ for this project is saved outside the repository. 
   - __scripts:__ contains all analytical scripts and workflows developed for this project
 
 ```sh
@@ -33,6 +34,7 @@ As usual, the project is divided in four main subdirectories and inside a github
 ├── processed_data
 │   └── cross_validation_input
 └── scripts
+    └── nextflow
 ```
 
 ## Glossary
@@ -51,7 +53,7 @@ As usual, the project is divided in four main subdirectories and inside a github
 - **prodigal** is a machine learning algorithm that uses a reference genome for
   an organism as training data to learn how to identify coding sequences (CDS)
   in other query genomes
-
+- **cross-validation** using the same set of data to evaluate accuracy of a model by partitioning into training and testing datasets and conducting analysis iteratively
 
 ## Accession numbers for available genomes (Checked on March 16, 2023)
 
@@ -71,7 +73,7 @@ assemblages A or B. Initial possible projects include:
 
 # Analysis pipeline
 
-## Eagle Environment setup
+### Eagle Environment setup
 
 ```sh
 # path to scripts for project
@@ -88,11 +90,11 @@ PRODIGAL_IMG="/project/cidgoh-object-storage/images/prodigal_2.6.3.sif"
 CHEWBACCA_IMG="/mnt/cidgoh-object-storage/images/chewbacca_3.1.2.sif"
 
 # request interactive session for development
-salloc --time=02:00:00 --ntasks=1 --cpus-per-task=6  --mem-per-cpu=6G 
+salloc --time=02:00:00 --ntasks=1 --cpus-per-task=8  --mem-per-cpu=10G 
 ```
 
 
-## Cedar Environment setup
+### Cedar Environment setup
 ```sh
 ```
 
@@ -314,6 +316,32 @@ done
 - Improved nextflow.config to parametrize resources for each process
 - Updated definitions of output
 - Currently testing AlleleCall and RemoveParalogs processes
+
+## 20230731 
+
+- Tried to allow input for several sets inside the same `.csv` samplesheet using the `multimap()` groovy operator. However, 
+- ALLELE_CALL process is working adequately now, may require matching to select final output to copy in results folder
+- Trying to use bactopia to produce standardized assemblies of available data
+
+```sh
+# create bactopia tab separated samplesheet
+ echo -e "sample\truntype\tr1\tr2\textra" > bactopia_samplesheet.csv
+
+for read1 in $(ls /project/60006/mdprieto/raw_data/giardia/{BCCDC,repositories}/fastq/*_1.fastq.gz | head -n 3);
+    do
+        # get the basename of file and remove suffix
+    sample_id=$(echo $read1 | xargs -n 1 basename -s '_1.fastq.gz')
+        # replace string '_1' for '_2'
+    read2="${read1/_1/_2}"
+        # write in a new line for each sample
+    echo -e "$sample_id\tpaired-end\t$read1\t$read2"
+    done 
+ >> input_samplesheet.csv
+```
+
+
+## TO DO
+- Verify data to publish in each process
 
 ```sh
 CSV_FILE="/project/60006/mdprieto/giardia_mlst_2023/processed_data/cross_validation_input/split_aa"
