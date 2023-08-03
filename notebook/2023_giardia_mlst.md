@@ -79,23 +79,17 @@ assemblages A or B. Initial possible projects include:
 # path to scripts for project
 SCRIPTS_DIR="/project/60005/mdprieto/giardia_mlst_2023/scripts"
 
-# path to downloaded giardia genomes
-BIOR_GENOMES="/project/60005/mdprieto/raw_data/giardia/biorepositories"
-
-# path to BCCDC genomes
-BC_GENOMES="/project/60005/mdprieto/raw_data/giardia/BCCDC"
-
-# singularity images
-PRODIGAL_IMG="/project/cidgoh-object-storage/images/prodigal_2.6.3.sif"
-CHEWBACCA_IMG="/mnt/cidgoh-object-storage/images/chewbacca_3.1.2.sif"
-
 # request interactive session for development
 salloc --time=02:00:00 --ntasks=1 --cpus-per-task=8  --mem-per-cpu=10G 
 ```
 
-
 ### Cedar Environment setup
 ```sh
+# path to giardia scripts directory
+SCRIPTS_GIARDIA="/project/6056895/mdprieto/giardia_mlst_2023/scripts"
+
+# interactive allocation
+salloc --time=1:30:0 --ntasks=1 --cpus-per-task=8  --mem-per-cpu=8G --account=def-whsiao-ab
 ```
 
 # Notebook notes
@@ -325,18 +319,17 @@ done
 
 ```sh
 # create bactopia tab separated samplesheet
- echo -e "sample\truntype\tr1\tr2\textra" > bactopia_samplesheet.csv
+echo -e "sample\truntype\tr1\tr2\textra" > bactopia_samplesheet.csv
 
-for read1 in $(ls /project/60006/mdprieto/raw_data/giardia/{BCCDC,repositories}/fastq/*_1.fastq.gz | head -n 3);
+for read1 in $(ls /project/6056895/mdprieto/raw_data/giardia/{BCCDC,repositories}/fastq/*_1.fastq.gz);
     do
         # get the basename of file and remove suffix
     sample_id=$(echo $read1 | xargs -n 1 basename -s '_1.fastq.gz')
         # replace string '_1' for '_2'
     read2="${read1/_1/_2}"
         # write in a new line for each sample
-    echo -e "$sample_id\tpaired-end\t$read1\t$read2"
+    echo -e "$sample_id\tpaired-end\t$read1\t$read2"  >> bactopia_samplesheet.csv
     done 
- >> input_samplesheet.csv
 ```
 
 
