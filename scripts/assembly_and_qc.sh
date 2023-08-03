@@ -1,15 +1,15 @@
 #!/bin/bash                                 
-#SBATCH --mem-per-cpu=8G                   
-#SBATCH --time=04:30:00                     
+#SBATCH --mem-per-cpu=10G                   
+#SBATCH --time=06:30:00                     
 #SBATCH --cpus-per-task=8                  
-#SBATCH --job-name="giardia_assembly_and_qc"     
+#SBATCH --job-name="giardia_assembly_qc_pilot"     
 #SBATCH --chdir=/scratch/mdprieto/          
 #SBATCH --output=jobs_output/%x_%j.out  
 
 ###############################################################################################
 
 # load modules
-module load StdEnv/2020  gcc/9.3.0
+module load nextflow apptainer
 
 # define environment variables
 SAMPLESHEET="/project/60006/mdprieto/giardia_mlst_2023/processed_data/bactopia_samplesheet.csv"
@@ -19,12 +19,12 @@ SINGULARITY_LOCAL_CACHE="/mnt/cidgoh-object-storage/images"
 
 nextflow run bactopia/main.nf \
     -profile singularity \
+    -resume \
     --samples $SAMPLESHEET \
     --outdir results/bactopia_giardia \
-    --singularity_cache $SINGULARITY_LOCAL_CACHE
-
-
-
+    --singularity_cache $SINGULARITY_LOCAL_CACHE \
+    --shovill_assembler spades \
+    --skip_amr 
 
 # -------------- QUAST
 
