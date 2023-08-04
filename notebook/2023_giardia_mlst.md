@@ -95,18 +95,13 @@ SCRIPTS_DIR="/project/60005/mdprieto/giardia_mlst_2023/scripts"
 # request interactive session for development
 salloc --time=02:00:00 --ntasks=1 --cpus-per-task=8  --mem-per-cpu=10G 
 
-<<<<<<< HEAD
-### Cedar Environment setup
-```sh
-=======
 #################################### Cedar ####################################
 
->>>>>>> dev
 # path to giardia scripts directory
 SCRIPTS_GIARDIA="/project/6056895/mdprieto/giardia_mlst_2023/scripts"
 
 # interactive allocation
-salloc --time=1:30:0 --ntasks=1 --cpus-per-task=8  --mem-per-cpu=8G --account=def-whsiao-ab
+salloc --time=2:00:0 --ntasks=1 --cpus-per-task=8  --mem-per-cpu=8G --account=def-whsiao-ab
 ```
 
 # Notebook notes

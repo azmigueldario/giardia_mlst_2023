@@ -1,9 +1,8 @@
 #!/bin/bash                                 
-#SBATCH --account=rrg-whsiao-ab
-#SBATCH --mem-per-cpu=5G                   
-#SBATCH --time=12:55:00                     
-#SBATCH --cpus-per-task=20                
-#SBATCH --job-name="giardia_assembly_and_qc"     
+#SBATCH --mem-per-cpu=10G                   
+#SBATCH --time=06:30:00                     
+#SBATCH --cpus-per-task=8                  
+#SBATCH --job-name="giardia_assembly_qc_pilot"     
 #SBATCH --chdir=/scratch/mdprieto/          
 #SBATCH --output=jobs_output/%x_%j.out  
 
