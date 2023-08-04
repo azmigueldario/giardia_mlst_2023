@@ -12,7 +12,7 @@
 params.csv_files    = '../../processed_data/cross_validation_input/split_aa'
 params.ref_genome   = "/mnt/cidgoh-object-storage/database/reference_genomes/giardia/assemblage_A/GCF_000002435.2_UU_WB_2.1_genomic.fna"
 params.organism     = "giardia_duodenalis"
-params.outdir       = "/scratch/mdprieto/results"//"$launchDir/results"
+params.outdir       = "/scratch/mdprieto/results/giardia_chewBBACA"//"$launchDir/results"
 
 // Create channels
 
@@ -49,34 +49,34 @@ process CHEWBACCA_CREATE_SCHEMA {
     container "https://depot.galaxyproject.org/singularity/chewbbaca%3A3.2.0--pyhdfd78af_0"
 
     input:
-    tuple val(set_id), path (contigs_test)
-    tuple val(organism), path (training_file)
+    tuple val(set_id), path (training_contigs)
+    tuple val(organism), path (prodigal_training)
     
     output:
-    tuple val(set_id), path("wgmlst_schema"), path('test_contigs_input.txt')
+    tuple val(set_id), path("wgmlst_schema"), path('train_contigs_list.txt')
     
     script:
     """
         # creates a file with one contig absolute path per line
-    echo $contigs_test | tr -s ' ' '\n' > test_contigs_input.txt
+    echo $training_contigs | tr -s ' ' '\n' > train_contigs_list.txt
 
     chewBBACA.py CreateSchema \
-        -i test_contigs_input.txt \
+        -i train_contigs_list.txt \
         -o wgmlst_schema \
-        --ptf $training_file \
+        --ptf $prodigal_training \
         --cpu $task.cpus
     """
 }
 
 process CHEWBACCA_ALLELE_CALL {
     label 'process_medium'
-    publishDir "${params.outdir}/${set_id}", mode: 'copy'
+    publishDir "${params.outdir}/${set_id}/train/", mode: 'copy'
     cache 'lenient'
     container "https://depot.galaxyproject.org/singularity/chewbbaca%3A3.2.0--pyhdfd78af_0"
 
     input:
-    tuple val(set_id), path(wgmlst_schema), path(test_contigs)
-    tuple val(set_id), path (contigs_test)
+    tuple val(set_id), path(wgmlst_schema), path(train_contigs_list)
+    tuple val(set_id), path (training_contigs)
     
     output:
     tuple val(set_id), path("results_AlleleCall")
@@ -84,7 +84,7 @@ process CHEWBACCA_ALLELE_CALL {
     script:
     """
     chewBBACA.py AlleleCall \
-        -i $test_contigs \
+        -i $train_contigs_list \
         -g $wgmlst_schema/schema_seed \
         -o results_AlleleCall \
         --cpu $task.cpus
@@ -92,44 +92,70 @@ process CHEWBACCA_ALLELE_CALL {
 }
 
 process REMOVE_PARALOGS {
-    label 'process_low'
+    label 'process_medium'
     publishDir "${params.outdir}/${set_id}", mode: 'copy'
     cache 'lenient'
+    container "https://depot.galaxyproject.org/singularity/chewbbaca%3A3.2.0--pyhdfd78af_0"
 
     input:
     tuple val(set_id), path(results_AlleleCall)
     
     output:
-    tuple val(set_id), path("results_no_paralogs**")
+    tuple val(set_id), path("**results_no_paralogs.tsv")
 
     script:
     """
     chewBBACA.py RemoveGenes \
         -i $results_AlleleCall/results_alleles.tsv \
-        -g $results_AlleleCall/paralogous_counts.tsv \
-        -o results_no_paralogs_${set_id}.tsv
+        -g $results_AlleleCalln /paralogous_counts.tsv \
+        -o ${set_id}_results_no_paralogs_train.tsv
     """
 }
 
 process EXTRACT_CGMLST {
-    publishDir "${params.outdir}", mode: 'copy'
+    label 'process_medium'
+    publishDir "${params.outdir}/${set_id}", mode: 'copy'
     cache 'lenient'
-    cpus params.threads
+    container "https://depot.galaxyproject.org/singularity/chewbbaca%3A3.2.0--pyhdfd78af_0"
 
     input:
-        tuple val(sample_id), val(set), path(contig), val(train_test)
-        path (results_no_paralogs)
+    tuple val(set_id), path(no_paralogs_results)
     
     output:
-        path(cg)
+    tuple val(set_id), path('*cgMLST')
 
     script:
-        """
-        chewBBACA.py RemoveGenes \
-            -i $results_AlleleCall/results_alleles.tsv \
-            -g $results_AlleleCall/paralogous_counts.tsv \
-            -o results_no_paralogs.tsvq
-        """
+    """
+    chewBBACA.py ExtractCgMLST \
+        -i $no_paralogs_results \
+        -o train_cgMLST
+    """
+}
+
+process ALLELE_CALL_TEST {
+    label 'process_medium'
+    publishDir "${params.outdir}/${set_id}", mode: 'copy'
+    cache 'lenient'
+    container "https://depot.galaxyproject.org/singularity/chewbbaca%3A3.2.0--pyhdfd78af_0"
+
+    input:
+    tuple val(set_id), path(wgmlst_schema), path(test_contigs)
+    tuple val(set_id), path (contigs_train)
+    
+    output:
+    tuple val(set_id), path("results_AlleleCall")
+
+    script:
+    """
+        # creates a file with one contig absolute path per line
+    echo $contigs_test | tr -s ' ' '\n' > test_contigs_input.txt
+
+    chewBBACA.py AlleleCall \
+        -i $test_contigs \
+        -g $wgmlst_schema/schema_seed \
+        -o results_AlleleCall \
+        --cpu $task.cpus
+    """
 }
 
 workflow{
@@ -149,10 +175,11 @@ workflow{
         .take(5)
         .groupTuple().set{ test_channel }
     
-    training_ch     = PRODIGAL_TRAINING(ref_genome_ch)
-    wgmlst_ch       = CHEWBACCA_CREATE_SCHEMA(train_channel, training_ch)
+    prodigal_ch     = PRODIGAL_TRAINING(ref_genome_ch)
+    wgmlst_ch       = CHEWBACCA_CREATE_SCHEMA(train_channel, prodigal_ch)
     wgmlst_schema   = CHEWBACCA_ALLELE_CALL(wgmlst_ch, train_channel)
     REMOVE_PARALOGS(wgmlst_schema)
+    EXTRACT_CGMLST(REMOVE_PARALOGS.out)
 
     }
 
@@ -164,75 +191,6 @@ workflow{
 params.folds=10
 params.schema_path=""
 params.outdir="$launchDir"
-
-//---------- Processes
-
-
-process CHEWBACCA_ALLELE_CALL {
-    publishDir "${params.outdir}", mode: 'copy'
-    cache 'lenient'
-    cpus params.threads
-
-    input:
-        tuple val(sample_id), val(set), path(contig), val(train_test)
-        path (wgmlst_schema)
-    
-    output:
-        path("results_AlleleCall")
-
-    script:
-        """
-        chewBBACA.py AlleleCall \
-            -i $contigs.test \
-            -g $wgmlst_schema/schema_seed \
-            -o results_AlleleCall \
-            --cpu $task.cpus
-        """
-}
-
-process CHEWBACCA_REMOVE_PARALOGS {
-    publishDir "${params.outdir}", mode: 'copy'
-    cache 'lenient'
-    cpus params.threads
-
-    input:
-        path (results_AlleleCall)
-    
-    output:
-        path("results_no_paralogs.tsv")
-
-    script:
-        """
-        chewBBACA.py RemoveGenes \
-            -i $results_AlleleCall/results_alleles.tsv \
-            -g $results_AlleleCall/paralogous_counts.tsv \
-            -o results_no_paralogs.tsv
-        """
-}
-
-process CHEWBACCA_EXTRACT_CGMLST {
-    publishDir "${params.outdir}", mode: 'copy'
-    cache 'lenient'
-    cpus params.threads
-
-    input:
-        tuple val(sample_id), val(set), path(contig), val(train_test)
-        path (results_no_paralogs)
-    
-    output:
-        path(cg)
-
-    script:
-        """
-        chewBBACA.py RemoveGenes \
-            -i $results_AlleleCall/results_alleles.tsv \
-            -g $results_AlleleCall/paralogous_counts.tsv \
-            -o results_no_paralogs.tsvq
-        """
-}
-chewBBACA.py ExtractCgMLST \
-    -i $results_no_paralogs \
-    -o results32_wgMLST/cgMLST
 
 // ------------- Mix training and testing datasets once again
 train_channel

@@ -20,6 +20,10 @@ SINGULARITY_LOCAL_CACHE="/project/6007413/cidgoh_share/singularity_imgs"
 
 nextflow run bactopia/bactopia -r v2.2.0 \
     -profile singularity \
+    -resume \
     --samples $SAMPLESHEET \
     --outdir results/bactopia_giardia \
-    --singularity_cache $SINGULARITY_LOCAL_CACHE
+    --singularity_cache $SINGULARITY_LOCAL_CACHE \
+    --shovill_assembler spades \
+    --skip_amr 
+
