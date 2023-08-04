@@ -26,12 +26,3 @@ nextflow run bactopia/main.nf \
     --shovill_assembler spades \
     --skip_amr 
 
-# -------------- QUAST
-
-quast.py $BC_GENOMES/*.fa \
-			-r $GIARDIA_REF/GCF_000002435.2_UU_WB_2.1_genomic.fna \
-			-g $GIARDIA_REF/GCF_000002435.2_UU_WB_2.1_genomic.gff \
-			-o /scratch/mdprieto/giardia_results/assembly_qc/quast \
-			--threads 8
-
-# ------------- CHECKM2

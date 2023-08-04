@@ -2,7 +2,7 @@
 
 # General information
 
-## Giardia genomes background
+## Background
 
 - Highly conserved, seems like they are in intense purifying selection.
   Assemblages A and B are the major cause of disease in humans. Others are
@@ -17,7 +17,24 @@
 		+ High Cysteine Membrane proteins (HCMP)  
 		+ Protein 21.1
 
-## Project directory structure
+## Objectives
+
+1. Find and retrieve all available genomes for Giardia intestinalis (Assemblages A and B)
+2. Create a robust core-genome MLST scheme for future epidemiological analysis of outbreaks
+    - Cross-validation of results given the small number of available datasets
+
+## Repository/folder structure
+
+**_main_** contains tested scripts and results, will contain final pipeline 
+**_dev_** is mainly for developing purposes and testing in eagle
+**_cedar_** is a local branch used in Compute Canada (Digital Research Alliance) for analysis
+
+To not overwrite local changes in **_cedar_** I will use the following snippet to update it:
+```sh
+git stash
+git merge <branch>
+git 
+```
 
 As usual, the project is divided in four main subdirectories and inside a github repository (https://github.com/azmigueldario/giardia_mlst_2023)
 
@@ -37,18 +54,6 @@ As usual, the project is divided in four main subdirectories and inside a github
     └── nextflow
 ```
 
-## Repository structure
-
-**_main_** contains tested scripts and results, will contain final pipeline 
-**_dev_** is mainly for developing purposes and testing in eagle
-**_cedar_** is a local branch used in Compute Canada (Digital Research Alliance) for analysis
-
-To not overwrite local changes in **_cedar_** I will use the following snippet to update it:
-  ```sh
-  git stash
-  git merge <branch>
-  git 
-  ```
 
 ## Glossary
 
@@ -68,7 +73,7 @@ To not overwrite local changes in **_cedar_** I will use the following snippet t
   in other query genomes
 - **cross-validation** using the same set of data to evaluate accuracy of a model by partitioning into training and testing datasets and conducting analysis iteratively
 
-## Accession numbers for available genomes (Checked on March 16, 2023)
+## Accessions of available data (verified 20230316)
 
 We are looking for short or long read whole genome data of G. duodenalis
 assemblages A or B. Initial possible projects include:
@@ -78,34 +83,26 @@ assemblages A or B. Initial possible projects include:
 3. JXTI00000000 (primary assembly SE reads using 454 technology)
 4. [SAMN12878171](https://www.ebi.ac.uk/ena/browser/view/SAMN12878171)  
 
-# Objectives
-
-1. Find and retrieve all available genomes for Giardia intestinalis (Assemblages A and B)
-2. Create a robust core-genome MLST scheme for future epidemiological analysis of outbreaks
-    - Cross-validation of results given the small number of available datasets
-
-# Analysis pipeline
-
-### Eagle Environment setup
+## Environment setup
 
 ```sh
+
+#################################### Eagle ####################################
+
 # path to scripts for project
 SCRIPTS_DIR="/project/60005/mdprieto/giardia_mlst_2023/scripts"
 
 # request interactive session for development
 salloc --time=02:00:00 --ntasks=1 --cpus-per-task=8  --mem-per-cpu=10G 
-```
 
+#################################### Cedar ####################################
 
-### Cedar Environment setup
-```sh
 # path to giardia scripts directory
 SCRIPTS_GIARDIA="/project/6056895/mdprieto/giardia_mlst_2023/scripts"
 
 # interactive allocation
 salloc --time=1:30:0 --ntasks=1 --cpus-per-task=8  --mem-per-cpu=8G --account=def-whsiao-ab
 ```
-
 
 # Notebook notes
 
@@ -316,7 +313,7 @@ done
 - Decided to create a working pipeline with a single csv input and repeat it ten times. Once I am more proficient with nextflow I can come back and improve upon it. 
 - For the CreateSchema and probably other processes, I need to `collect().flatten()` the contigs to feed them and I still do not know how to do it
   - Singularity image is not pulling correctly from 'https://depot.galaxyproject.org/singularity/chewbbaca%3A3.2.0--pyhdfd78af_0' must use manually
-  > singularity pull depot.galaxyproject.org-singularity-chewbbaca%3A3.2.0--pyhdfd78af_0.img https://depot.galaxyproject.org/singularity/chewbbaca%3A3.2.0--pyhdfd78af_0\
+  > singularity pull --name depot.galaxyproject.org-singularity-chewbbaca%3A3.2.0--pyhdfd78af_0.img https://depot.galaxyproject.org/singularity/chewbbaca%3A3.2.0--pyhdfd78af_0\
 - Had a succesful run of a pilot with the initial processes
 
 ## 20230726 
@@ -349,6 +346,18 @@ for read1 in $(ls /project/6056895/mdprieto/raw_data/giardia/{BCCDC,repositories
 
 ```
 
+## 20230802 - Developing chewBBACA pipeline, troubleshoot bactopia in cedar
+
+- Updated `draft.nf` now it includes a working copy of `remove_paralogs` and `extract_cgmlst` processes
+- Improved naming of input/output throughout the pipeline to better reflect the usage of train/test subsets
+- Troubleshooting execution of bactopia in **cedar** cluster, import error for `MINMER_SKETCH` process
+  - Seems to be an issue where the container is using the `python` interpreter and `numpy` module from the cedar environment, could be solved by adding an option to isolate the container environment to the bactopia `docker.config` (inherited to `singularity.config`)
+```sh
+  withLabel: 'minmer_sketch|minmer_query' {
+      container = "${docker_repo}/minmers:${manifest.version}"
+      singularity.runOptions = "-c --bind /project,/scratch"
+      }
+```
 
 ## TO DO
 - Verify data to publish in each process
