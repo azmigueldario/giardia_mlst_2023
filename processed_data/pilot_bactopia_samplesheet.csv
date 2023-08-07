@@ -2,3 +2,4 @@ sample	runtype	r1	r2	extra
 SRX1144605_SRR2168393	paired-end	/project/6056895/mdprieto/raw_data/giardia/BCCDC/fastq/SRX1144605_SRR2168393_1.fastq.gz	/project/6056895/mdprieto/raw_data/giardia/BCCDC/fastq/SRX1144605_SRR2168393_2.fastq.gz
 SRX1154245_SRR2158266	paired-end	/project/6056895/mdprieto/raw_data/giardia/BCCDC/fastq/SRX1154245_SRR2158266_1.fastq.gz	/project/6056895/mdprieto/raw_data/giardia/BCCDC/fastq/SRX1154245_SRR2158266_2.fastq.gz
 SRX1592101_SRR3177738	paired-end	/project/6056895/mdprieto/raw_data/giardia/BCCDC/fastq/SRX1592101_SRR3177738_1.fastq.gz	/project/6056895/mdprieto/raw_data/giardia/BCCDC/fastq/SRX1592101_SRR3177738_2.fastq.gz
+SRX1592162_SRR3177739	paired-end	/project/6056895/mdprieto/raw_data/giardia/BCCDC/fastq/SRX1592162_SRR3177739_1.fastq.gz	/project/6056895/mdprieto/raw_data/giardia/BCCDC/fastq/SRX1592162_SRR3177739_2.fastq.gz
