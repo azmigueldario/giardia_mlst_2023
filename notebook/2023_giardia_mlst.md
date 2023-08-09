@@ -1,10 +1,8 @@
-# General information
+# Giardia MLST creation and validation
 
-## Table of contents
+## General information
 
-[toc]
-
-## Background
+### Background
 
 - Highly conserved, seems like they are in intense purifying selection.
   Assemblages A and B are the major cause of disease in humans. Others are
@@ -19,13 +17,13 @@
   - High Cysteine Membrane proteins (HCMP)  
   - Protein 21.1
 
-## Objectives
+### Objectives
 
 1. Find and retrieve all available genomes for Giardia intestinalis (Assemblages A and B)
 2. Create a robust core-genome MLST scheme for future epidemiological analysis of outbreaks
     - Cross-validation of results given the small number of available datasets
 
-## Repository/folder structure
+### Repository/folder structure
 
 **_main_** contains tested scripts and results, will contain final pipeline
 **_dev_** is mainly for developing purposes and testing in eagle
@@ -57,7 +55,7 @@ As usual, the project is divided in four main subdirectories and inside a github
     └── nextflow
 ```
 
-## Glossary
+### Glossary
 
 - **dN/dS** - Nonsynonymous to synonymous, high when active selection and low
   when purifying selection
@@ -75,7 +73,7 @@ As usual, the project is divided in four main subdirectories and inside a github
   in other query genomes
 - **cross-validation** using the same set of data to evaluate accuracy of a model by partitioning into training and testing datasets and conducting analysis iteratively
 
-## Accessions of available data (verified 20230316)
+### Accessions of available data (verified 20230316)
 
 We are looking for short or long read whole genome data of G. duodenalis
 assemblages A or B. Initial possible projects include:
@@ -85,7 +83,7 @@ assemblages A or B. Initial possible projects include:
 3. JXTI00000000 (primary assembly SE reads using 454 technology)
 4. [SAMN12878171](https://www.ebi.ac.uk/ena/browser/view/SAMN12878171)  
 
-## Environment setup
+### Environment setup
 
 ```sh
 #################################### Eagle ####################################
@@ -105,9 +103,9 @@ SCRIPTS_GIARDIA="/project/6056895/mdprieto/giardia_mlst_2023/scripts"
 salloc --time=2:00:0 --ntasks=1 --cpus-per-task=8  --mem-per-cpu=8G --account=def-whsiao-ab
 ```
 
-# Notebook notes
+## Notebook notes
 
-## 20230227 - Preparation
+### 20230227 - Preparation
 
 - Created **Pubmed** search to track relevant papers for literature review and
   to fill-up introduction  
@@ -115,7 +113,7 @@ salloc --time=2:00:0 --ntasks=1 --cpus-per-task=8  --mem-per-cpu=8G --account=de
 - Defined a preliminary workflow for QC-Assembly-Annotation in a .ppt file  
         - QC of assembly by backtracking mapping to reference genomes  
 
-## 20230316 - Obtain available relevant genomes
+### 20230316 - Obtain available relevant genomes
 
 - Searching genomes for _G. duodenalis_ in the European Nucleotide Archive
   (ENA), looking through projects
@@ -128,7 +126,7 @@ salloc --time=2:00:0 --ntasks=1 --cpus-per-task=8  --mem-per-cpu=8G --account=de
 - Downloaded SRR accession list with all available genomes to the project repo,
   contains data from paired end reads of assemblages A and B
 
-## 20230405 - Preparation for chewBACCA run
+### 20230405 - Preparation for chewBACCA run
 
 - With the pipeline for NGS data download of nf-core
   [(nf-core/fetchngs)](https://nf-co.re/fetchngs), I retrieve the genomes from
@@ -158,7 +156,7 @@ singularity pull https://depot.galaxyproject.org/singularity/chewbbaca%3A3.1.2--
 
 ```
 
-## 20230412 - Preparation for chewBACCA run
+### 20230412 - Preparation for chewBACCA run
 
 chewBACCA requires training files for prodigal to identify CDS.
 
@@ -176,13 +174,13 @@ wget https://ftp.ncbi.nlm.nih.gov/genomes/refseq/protozoa/Giardia_intestinalis/l
 wget https://ftp.ncbi.nlm.nih.gov/genomes/refseq/protozoa/Giardia_intestinalis/latest_assembly_versions/GCF_000002435.2_UU_WB_2.1/GCF_000002435.2_UU_WB_2.1_genomic.gff.gz
 ```
 
-## 20230515 - Advances
+### 20230515 - Advances
 
 - Performed AlleleCall
 - Downloaded **checkm2** singularity image and prepared necessary database
 - Created **assembly_qc** script to analyze BCCDC genomes
 
-## 20230620
+### 20230620
 
 - After training for a while in nextflow to optimize pipeline, ready to give it
   a go once again
@@ -198,7 +196,7 @@ wget https://ftp.ncbi.nlm.nih.gov/genomes/refseq/protozoa/Giardia_intestinalis/l
   - Raw data in `fastq` format is already available in my environment as I
       obtained it from NCBI
 
-## 20230621
+### 20230621
 
 - Created an input samplesheet for the pipeline using the command below
 
@@ -236,7 +234,7 @@ conda activate sklearn_env
       provided to the script in the command line
 - Drafted preliminary `main.nf` for chewBACCA pipeline
 
-## 20230711 - Creating input channels for cross-validation
+### 20230711 - Creating input channels for cross-validation
 
 - Different ideas to classify reads as input channels
   - Have a long format with columns {...set1,set2,set3,...setn} and divide
@@ -245,7 +243,7 @@ conda activate sklearn_env
       column
   - Create a custom groovy script that maps the samples however I want them
 
-## 20230713 - Developing workflow
+### 20230713 - Developing workflow
 
 - Created new samplesheet that contains contigs only, that is necessary as input for chewbacca
 - Prepared question about how to approach cross-validation for nextflow forum. I have thought about several ideas but have no final solution and do not want to stale advances anymore.
@@ -264,7 +262,7 @@ for contig in $(ls /home/mdprieto/mdprieto_projects/raw_data/giardia/{BCCDC,repo
     done
 ```
 
-## 20230717 - Developing workflow: adjusting python script for test/sample split
+### 20230717 - Developing workflow: adjusting python script for test/sample split
 
 Modified python script to produce consolidated long and wide format `.csv`. The new script produces results in long or wide format too.
 
@@ -294,7 +292,7 @@ Channel
 
 ```
 
-### Split csv file in number of lines but keeping header
+#### Split csv file in number of lines but keeping header
 
 ```sh
 tail -n +2 INPUT_FILE | split -l 4 - prefix_
@@ -306,7 +304,7 @@ do
 done
 ```
 
-## 20230717 - Developing workflow: setup initial process for prodigal training
+### 20230717 - Developing workflow: setup initial process for prodigal training
 
 - When setting up a pipeline with **Singularity** in nextflow, I have to add the following parameters to the `nextflow.config` file to create the mounting environment to execute the code and to load singularity
     > singularity.enabled = true
@@ -320,14 +318,14 @@ done
 singularity pull --name depot.galaxyproject.org-singularity-chewbbaca%3A3.2.0--pyhdfd78af_0.img https://depot.galaxyproject.org/singularity/chewbbaca%3A3.2.0--pyhdfd78af_0\
 ```
 
-## 20230726
+### 20230726
 
 - Added output directory to process, optimized writing of first two processes
 - Improved nextflow.config to parametrize resources for each process
 - Updated definitions of output
 - Currently testing AlleleCall and RemoveParalogs processes
 
-## 20230731
+### 20230731
 
 - Tried to allow input for several sets inside the same `.csv` samplesheet using the `multimap()` groovy operator. However,
 - ALLELE_CALL process is working adequately now, may require matching to select final output to copy in results folder
@@ -349,7 +347,7 @@ for read1 in $(ls /project/6056895/mdprieto/raw_data/giardia/{BCCDC,repositories
     done 
 ```
 
-## 20230802 - Developing chewBBACA pipeline, troubleshoot bactopia in cedar
+### 20230802 - Developing chewBBACA pipeline, troubleshoot bactopia in cedar
 
 - Updated `draft.nf` now it includes a working copy of `remove_paralogs` and `extract_cgmlst` processes
 - Improved naming of input/output throughout the pipeline to better reflect the usage of train/test subsets
@@ -365,18 +363,21 @@ withLabel: 'minmer_sketch|minmer_query' {
     }
 ```
 
-## 20230804 - Assembling all Illumina genomes in batch (Cedar)
+### 20230804 - Assembling all Illumina genomes in batch (Cedar)
 
 - Now, there is an issue where spades is running out of memory for its tasks. I modified the `base.config` file of Bactopia to add more memory for `assemble_genome` process
   - Additional memory did not work, seems like the HPC `/tmp` folder may not have sufficient memory for `Spades` so I try adding an additional option for the **Shovill** assembler in bactopia: `--shovill_opts "--tmp-dir /scratch/mdprieto/tmp"`
   - To speed up the assembly and other processes, I also increase the maximum runtime and the cpus of certain tasks in bactopia. It is necessary as the Giardia genome may be significantly larger than a usual one (12M vs 6.5M)
 
-## 20230805 - Assembling all Illumina genomes in batch (Cedar, Eagle)
+### 20230805 - Assembling all Illumina genomes in batch (Cedar, Eagle)
 
 - Taking too long to schedule a long running job in Cedar
-- Created local config file for execution of **Bactopia** through slurm submission of jobs in Eagle (`scripts/eagle.config`)
+- Created local config file for execution of **Bactopia** through slurm submission of jobs in Eagle (`scripts/eagle.config`) that includes:
+  - runOptions to map a large directory to the `/tmp` inside singularity containers
+  - detailed instructions to run jobs inside slurm on Eagle
+  - configuration for processes to run for a longer time and not be cancelled due to large size of Giardia spp. genome (compared to bacteria)
 
-## TO DO
+## Pending work
 
 - Verify data to publish in each process
 
