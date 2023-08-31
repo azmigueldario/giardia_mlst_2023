@@ -96,6 +96,10 @@ def n_fold_split():
             train, test = train_test_split (df,
                                             test_size=args.test_proportion)
                 
+                # assign a new column with selected values
+            train = train.assign(set = f'set{i}', value = "train")
+            test = test.assign(set = f'set{i}', value = "test")
+            
                 # merge dataframes keeping the same column names
             merged = pd.concat([test, train], ignore_index=True, verify_integrity=True)
                 # export it to a csv
