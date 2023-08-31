@@ -11,20 +11,31 @@ from sklearn.model_selection import train_test_split
 #def parse_arguments():
 """Reads arguments from the command line for my script."""
 
-parser = argparse.ArgumentParser(description="Produces 'n' pairs of .csv files with testing and training datasets.")
+parser = argparse.ArgumentParser(description="""
+                                 This script takes a '.csv' data file as input. It divides it into 'training' and 'testing' subsets
+                                 inside a for loop 'n' times. Every time a dataset is produced, the script saves it in the specified
+                                 output directory with the designed format (wide[default]/long/split).
+                                 """,
+                                 formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument("-n", "--number_iterations", metavar='0,1,2,10,100...', 
                     default=10, required=False, type=int,
                     help='number of iterations for cross validation')
-parser.add_argument("-o", "--output_dir", metavar='', required=True, type=str,
-                    help='path [absolute/relative] to directory where output file(s) will be saved')
 parser.add_argument("--test_proportion", default=0.2, type=float,
-                    help="percentage of available data to be used for testing.")
+                    help="percentage of available samples in the complete dataset that will be selected for testing subset in each iteration.")
 parser.add_argument("--long_format", action="store_true",
                     help="outputs results as a single LONG format .csv file")
 parser.add_argument("--separate", action="store_true",
                     help="outputs results as several .csv files. Produces wide format by default")
+parser.add_argument("-o", "--output_dir", metavar='', required=True, type=str,
+                    help='REQUIRED: path [absolute/relative] to directory where output file(s) will be saved')
 parser.add_argument("input_file", 
-                    help="path [absolute/relative] to an input dataset in .csv format")
+                    help="""path [absolute/relative] to an input dataset in .csv format that contains information about the contigs to analyze in
+                      the form:\n
+                      sample,contig
+                      sample_XX_01,path/to/contig.fa
+                      sample_XX_02,path/to/contig.fa
+                      sample_XX_03,path/to/contig.fa
+                      """)
 
 args = parser.parse_args()
 
@@ -36,6 +47,8 @@ n = args.number_iterations
 if args.test_proportion > 1 or args.test_proportion < 0:
     raise ValueError('--test_proportion must be between 0 and 1.')
 
+
+
 # ---------------------------------  define function
 
 def n_fold_split():
@@ -44,7 +57,7 @@ def n_fold_split():
         output directory.             
     """
 
-    # read dataset
+    # read dataset file in desired format
     df = pd.read_csv(f'{args.input_file}',
                      header=0)
 
@@ -52,7 +65,9 @@ def n_fold_split():
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-    
+    # sanity to verify input dataset
+    if df.columns[0] != "sample" or df.columns[1] != "contig":
+        raise ValueError('Input dataset must have two columns with headers [sample,contigs]')
 
     if args.long_format:
         # to produce tests in long_format
@@ -80,10 +95,12 @@ def n_fold_split():
 
             train, test = train_test_split (df,
                                             test_size=args.test_proportion)
-
-            train.to_csv(f'{args.output_dir}/train_set_{i}.csv', index=False)
-            test.to_csv(f'{args.output_dir}/test_set_{i}.csv', index=False)   
-
+                
+                # merge dataframes keeping the same column names
+            merged = pd.concat([test, train], ignore_index=True, verify_integrity=True)
+                # export it to a csv
+            merged.to_csv(f'{args.output_dir}/subset_{i}.csv', index=False)
+            
     else:
         # produces results in wide format by default
         merged_wide = df.copy()     # creates copy to avoid modifying primary one
