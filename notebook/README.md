@@ -9,4 +9,8 @@ All illumina genomes are assembled using **Shovill** and **Spades**, with defaul
 scripts/cedar/full_assembly_and_qc.sh
 ```
 
+## Prepare datasets for cross-validation
+
+
+
 ## Cross validation of cgMLST calling using chewBBACA

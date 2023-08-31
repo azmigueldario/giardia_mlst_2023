@@ -367,7 +367,7 @@ withLabel: 'minmer_sketch|minmer_query' {
 
 - Now, there is an issue where spades is running out of memory for its tasks. I modified the `base.config` file of Bactopia to add more memory for `assemble_genome` process
   - Additional memory did not work, seems like the HPC `/tmp` folder may not have sufficient memory for `Spades` so I try adding an additional option for the **Shovill** assembler in bactopia: `--shovill_opts "--tmp-dir /scratch/mdprieto/tmp"`
-  - To speed up the assembly and other processes, I also increase the maximum runtime and the cpus of certain tasks in bactopia. It is necessary as the Giardia genome may be significantly larger than a usual one (12M vs 6.5M)
+  - To speed up the assembly and other processes, I also increase the maximum runtime and the cpus of certain tasks in bactopia. It is necessary as the Giardia genome may be significantly larger than a bacterial one (12M vs 6.5M)
 
 ### 20230805 - Assembling all Illumina genomes in batch (Cedar, Eagle)
 
@@ -377,6 +377,13 @@ withLabel: 'minmer_sketch|minmer_query' {
   - detailed instructions to run jobs inside slurm on Eagle
   - configuration for processes to run for a longer time and not be cancelled due to large size of Giardia spp. genome (compared to bacteria)
 
+### 20230830 - restart work on the project
+
+- Rebased the development branch with the main branch
+- Input datasets were removed by mistake, so I recreate them. Yet, there is poor documentation in the python script so I improve it for future uses including sanity check for input dataset as well as detailed explanations of the expected parameters.
+  - The ideal output are several separated files each one having the train and testing datasets. Three columns are expected: [sample, contig, value] where the value holds the assignment of train or test in every iteration.
+    - Check `pandas.concat()` to solve it
+
 ## Pending work
 
 - Verify data to publish in each process
@@ -385,6 +392,7 @@ withLabel: 'minmer_sketch|minmer_query' {
 CSV_FILE="/project/60006/mdprieto/giardia_mlst_2023/processed_data/cross_validation_input/split_aa"
 GIARDIA_NXF="/project/60006/mdprieto/giardia_mlst_2023/scripts/nextflow"
 
+cd ~/scratch
 nextflow run $GIARDIA_NXF/draft.nf \
     -resume \
     -profile singularity \
