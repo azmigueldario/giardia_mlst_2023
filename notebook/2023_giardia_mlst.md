@@ -381,20 +381,24 @@ withLabel: 'minmer_sketch|minmer_query' {
 
 - Rebased the development branch with the main branch
 - Input datasets were removed by mistake, so I recreate them. Yet, there is poor documentation in the python script so I improve it for future uses including sanity check for input dataset as well as detailed explanations of the expected parameters.
-  - The ideal output are several separated files each one having the train and testing datasets. Three columns are expected: [sample, contig, value] where the value holds the assignment of train or test in every iteration.
-    - Check `pandas.concat()` to solve it
+  - The ideal output is a long_format file that has four columns containing [sample, contig, set, value] where the value holds the assignment of train or test in every iteration.
+
+### 20230831 - Continue development of pipeline
+
+- In order to process several sample sets using the same prodigal training file, the latter must be assigned to a value channel. Thus, I use the `first()` operator as follows:
+  > prodigal_ch = PRODIGAL_TRAINING().first()
 
 ## Pending work
 
 - Verify data to publish in each process
 
 ```sh
-CSV_FILE="/project/60006/mdprieto/giardia_mlst_2023/processed_data/cross_validation_input/split_aa"
+CSV_FILE="/project/60006/mdprieto/giardia_mlst_2023/processed_data/cross_validation_input/pilot_long.csv"
 GIARDIA_NXF="/project/60006/mdprieto/giardia_mlst_2023/scripts/nextflow"
 
-cd ~/scratch
+  # cd ~/scratch
 nextflow run $GIARDIA_NXF/draft.nf \
     -resume \
-    -profile singularity \
+    -profile singularity,slurm \
     --csv_files $CSV_FILE
 ```
