@@ -4,12 +4,12 @@
 
 ### Background
 
-- Highly conserved, seems like they are in intense purifying selection.
+- Highly conserved genome, seems like they are in intense purifying selection.
   Assemblages A and B are the major cause of disease in humans. Others are
   mostly transmitted among animals.  
-  - Yet, nucleotide sequence identity between assemblages A and B is around 70%  
-  - Assemblages AI and AII have ~99% similarity
-- Few introns, mostly localized in genes of tRNA
+  - Yet, nucleotide sequence identity between assemblages A and B is around 70%.
+  Assemblages AI and AII have ~99% similarity.
+- Few introns, mostly localized in genes of tRNA, so it behaves somehow like a bacterial genome.
 - HIghly variable genes include:  
   - Variant-specific Surface proteins (VSP). Found commonly in genomic
     regions with with rearrangements.  
@@ -78,7 +78,7 @@ As usual, the project is divided in four main subdirectories and inside a github
 We are looking for short or long read whole genome data of G. duodenalis
 assemblages A or B. Initial possible projects include:
 
-1. AACB00000000 / GCA_000002435.2 (Whole  genome of WB isolate (AI))  
+1. AACB00000000 / GCA_000002435.2 (Whole  genome of WB isolate (AI))  - **Reference genome**
 2. PRJNA280606 (BCCDC primary study)
 3. JXTI00000000 (primary assembly SE reads using 454 technology)
 4. [SAMN12878171](https://www.ebi.ac.uk/ena/browser/view/SAMN12878171)  
@@ -365,7 +365,7 @@ withLabel: 'minmer_sketch|minmer_query' {
 
 ### 20230804 - Assembling all Illumina genomes in batch (Cedar)
 
-- Now, there is an issue where spades is running out of memory for its tasks. I modified the `base.config` file of Bactopia to add more memory for `assemble_genome` process
+- Now, there is an issue where `spades` is running out of memory for its tasks. I modified the `base.config` file of Bactopia to add more memory for `assemble_genome` process
   - Additional memory did not work, seems like the HPC `/tmp` folder may not have sufficient memory for `Spades` so I try adding an additional option for the **Shovill** assembler in bactopia: `--shovill_opts "--tmp-dir /scratch/mdprieto/tmp"`
   - To speed up the assembly and other processes, I also increase the maximum runtime and the cpus of certain tasks in bactopia. It is necessary as the Giardia genome may be significantly larger than a bacterial one (12M vs 6.5M)
 
@@ -379,7 +379,7 @@ withLabel: 'minmer_sketch|minmer_query' {
 
 ### 20230830 - restart work on the project
 
-- Rebased the development branch with the main branch
+- Rebased the development branch with the main branch for this project
 - Input datasets were removed by mistake, so I recreate them. Yet, there is poor documentation in the python script so I improve it for future uses including sanity check for input dataset as well as detailed explanations of the expected parameters.
   - The ideal output is a long_format file that has four columns containing [sample, contig, set, value] where the value holds the assignment of train or test in every iteration.
 
@@ -387,8 +387,34 @@ withLabel: 'minmer_sketch|minmer_query' {
 
 - In order to process several sample sets using the same prodigal training file, the latter must be assigned to a value channel. Thus, I use the `first()` operator as follows:
   > prodigal_ch = PRODIGAL_TRAINING().first()
+  
+### 20231012 - Preparing all assembly inputs
 
-## Pending work
+NCBI accessions:
+
+- I cleaned the list of NCBI accessions to remove the reference genome for Giardia Assemblage A. This one is downloaded directly using `curl`. It is now ready for prediction with prodigal and also to be included in the MLST pipeline
+- Updated all pathways in eagle as the folder structure has changed in the last couple of months. Also, no need to assemble reference genome, as it can be downloaded after polishing.
+- Updated version (1.10.1) of `fetchngs` is now working, described all steps to reproduce analysis in `./notebook/README.md`
+  - Does not require `--force_sra_tools` option
+
+```sh
+# verifies data download script
+sbatch /project/60006/mdprieto/giardia_mlst_2023/scripts/download_data_repositories.sh
+```
+
+### 20231116 - Catch up with progress
+
+- Read all previous documentation, commited pending changes, and verified download of all datasets
+
+
+## Progress and pending work
+
+### Completed
+
+- Downloaded all Giardia Assemblage A and B genomes (Verified)
+- Produced standardized fasta assemblies using SPAdes
+
+### To do
 
 - Verify data to publish in each process
 

@@ -7,6 +7,7 @@
 ========================================================================================
 */
 
+
 // Input definition 
 
     // csv_input may have one subset or multiple, here it has three
@@ -22,8 +23,42 @@ ref_genome_ch = Channel.of([params.organism, params.ref_genome])
 
 // --------------- Trial snippets
 
+// Branch criteria: define criteria for separation and apply to input channel after splitCsv
 
-// GroupTuple directly
+def criteria_branch = branchCriteria {it ->        
+    train: it.value=="train"
+        return tuple(it.set, it.contig)
+    test: it.value == "test"
+        return tuple(it.set, it.contig)  }
+
+    csv_channel
+        .splitCsv(header:true)
+        .branch(criteria_branch)
+        .set{contigs_channel}
+
+// Use groupTuple() to make a tuple containing the identifier value and a list of all contigs of a subset
+    training_channel = contigs_channel.train.groupTuple()
+    testing_channel  = contigs_channel.test.groupTuple()
+    
+process FOO{
+    debug true
+    
+    input:
+    tuple val(set_id), path (training_contigs)
+    
+    script:
+    """
+        # creates a file with one contig absolute path per line
+    echo $training_contigs | tr -s ' ' '\n' > train_contigs_list.txt
+    
+    cat train_contigs_list.txt
+    """
+}
+
+workflow{
+    FOO(training_channel)
+    }
+/* GroupTuple directly
     csv_channel
         .splitCsv(header:true)
         .map(row -> tuple(row.set, row.value, row.contig) )

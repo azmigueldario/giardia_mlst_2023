@@ -12,7 +12,7 @@
 params.csv_files    = '../../processed_data/cross_validation_input/split_aa'
 params.ref_genome   = "/mnt/cidgoh-object-storage/database/reference_genomes/giardia/assemblage_A/GCF_000002435.2_UU_WB_2.1_genomic.fna"
 params.organism     = "giardia_duodenalis"
-params.outdir       = "/scratch/mdprieto/results/giardia_chewBBACA"//"$launchDir/results"
+params.outdir       = "/scratch/mdprieto/results_giardia_test"
 
 // Create channels
 
@@ -42,8 +42,7 @@ process PRODIGAL_TRAINING {
 }
 
 process CHEWBACCA_CREATE_SCHEMA {
-    //label "process_medium"
-    cpus 8
+    label "process_medium"
     publishDir "${params.outdir}/${set_id}", mode: 'copy'
     cache 'lenient'
     container "https://depot.galaxyproject.org/singularity/chewbbaca%3A3.2.0--pyhdfd78af_0"
@@ -134,13 +133,14 @@ process EXTRACT_CGMLST {
 
 process ALLELE_CALL_TEST {
     label 'process_medium'
-    publishDir "${params.outdir}/${set_id}", mode: 'copy'
+    publishDir "${params.outdir}/${set_id}/test/", mode: 'copy'
     cache 'lenient'
     container "https://depot.galaxyproject.org/singularity/chewbbaca%3A3.2.0--pyhdfd78af_0"
 
     input:
-    tuple val(set_id), path(wgmlst_schema), path(test_contigs)
-    tuple val(set_id), path (contigs_train)
+    tuple val(set_id), path(wgmlst_schema), path(train_contigs_list)
+    tuple val(set_id), path (contig_files_test)
+    tuple val(set_id), path(cgMLST_train)
     
     output:
     tuple val(set_id), path("results_AlleleCall")
@@ -148,37 +148,43 @@ process ALLELE_CALL_TEST {
     script:
     """
         # creates a file with one contig absolute path per line
-    echo $contigs_test | tr -s ' ' '\n' > test_contigs_input.txt
+    echo $contig_files_test | tr -s ' ' '\n' > test_contigs_input.txt
 
     chewBBACA.py AlleleCall \
-        -i $test_contigs \
+        -i test_contigs_input.txt \
         -g $wgmlst_schema/schema_seed \
-        -o results_AlleleCall \
+        --gl $cgMLST_train/ \
+        -o AlleleCall_test \
         --cpu $task.cpus
     """
 }
 
 workflow{
+
+        // Branch criteria: define criteria for separation and apply to input channel after splitCsv
+    def criteria_branch = branchCriteria {it ->        
+        train: it.value=="train"
+            return tuple(it.set, it.contig)
+        test: it.value == "test"
+            return tuple(it.set, it.contig)  }
+        
+        // Branch input dataset as specified previously
     csv_channel
         .splitCsv(header:true)
-        .branch { train: it.value == "train"
-                    return tuple(it.set, it.contig)
-                  test: it.value == "test"
-                    return tuple(it.set, it.contig)  }
+        .branch(criteria_branch)
         .set{contigs_channel}
 
-    contigs_channel.train
-        .take(20)
-        .groupTuple().set{ train_channel }
+        // Use groupTuple() to make a tuple containing the identifier value and a list of all contigs of a subset
+    train_channel = contigs_channel.train.groupTuple()
+    test_channel  = contigs_channel.test.groupTuple()
     
-    contigs_channel.test
-        .take(5)
-        .groupTuple().set{ test_channel }
-    
-    prodigal_ch     = PRODIGAL_TRAINING(ref_genome_ch)
-    wgmlst_ch       = CHEWBACCA_CREATE_SCHEMA(train_channel, prodigal_ch)
-    wgmlst_schema   = CHEWBACCA_ALLELE_CALL(wgmlst_ch, train_channel)
-    REMOVE_PARALOGS(wgmlst_schema)
+        // create prodigal training file
+    PRODIGAL_TRAINING(ref_genome_ch)
+        // create whole genome mlst schema
+    ch_wgmlst           = CHEWBACCA_CREATE_SCHEMA(train_channel, PRODIGAL_TRAINING.out.first())
+        
+    ch_wg_results       = CHEWBACCA_ALLELE_CALL(ch_wgmlst, train_channel)
+    REMOVE_PARALOGS(ch_wg_results)
     EXTRACT_CGMLST(REMOVE_PARALOGS.out)
 
     }

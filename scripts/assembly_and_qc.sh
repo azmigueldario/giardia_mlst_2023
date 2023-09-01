@@ -1,4 +1,4 @@
-#!/bin/bash
+ll#!/bin/bash
 #SBATCH --mem-per-cpu=3G
 #SBATCH --time=24:00:00
 #SBATCH --cpus-per-task=4
