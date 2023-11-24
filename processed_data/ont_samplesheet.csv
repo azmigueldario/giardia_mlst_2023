@@ -1,0 +1,6 @@
+sample	runtype	genome_size	species	r1	r2	extra
+SRX6745908-SRR10007609	ont	0	UNKNOWN_SPECIES	/project/60006/mdprieto/raw_data/giardia/repositories/fastq/SRX6745908-SRR10007609.fastq.gz		
+SRX6745910_SRR10007607	paired-end	0	UNKNOWN_SPECIES	/project/60006/mdprieto/raw_data/giardia/repositories/fastq/SRX6745910_SRR10007607_1.fastq.gz	/project/60006/mdprieto/raw_data/giardia/repositories/fastq/SRX6745910_SRR10007607_2.fastq.gz	
+SRX6745952-SRR10007652	ont	0	UNKNOWN_SPECIES	/project/60006/mdprieto/raw_data/giardia/repositories/fastq/SRX6745952-SRR10007652.fastq.gz		
+SRX6745954_SRR10007650	paired-end	0	UNKNOWN_SPECIES	/project/60006/mdprieto/raw_data/giardia/repositories/fastq/SRX6745954_SRR10007650_1.fastq.gz	/project/60006/mdprieto/raw_data/giardia/repositories/fastq/SRX6745954_SRR10007650_2.fastq.gz	
+SRX6746022-SRR10007724	ont	0	UNKNOWN_SPECIES	/project/60006/mdprieto/raw_data/giardia/repositories/fastq/SRX6746022-SRR10007724.fastq.gz		
