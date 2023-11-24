@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --mem-per-cpu=4G
-#SBATCH --time=06:30:00
+#SBATCH --time=08:30:00
 #SBATCH --cpus-per-task=6
 #SBATCH --job-name="giardia_assembly_qc_pilot"
 #SBATCH --chdir=/scratch/mdprieto/
@@ -21,8 +21,11 @@ nextflow run bactopia/bactopia -r v3.0.0 \
 -profile singularity \
 --nfconfig $CUSTOM_CONFIG \
 --samples $SAMPLESHEET \
---outdir results/bactopia_giardia \
+--outdir /scratch/mdprieto/results/bactopia_giardia \
 --shovill_assembler spades \
 --skip_amr \
---long_reads
+--long_reads \
+--skip-prokka \
+--skip_mlst
+
 
