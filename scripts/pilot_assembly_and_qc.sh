@@ -1,10 +1,10 @@
 #!/bin/bash
 #SBATCH --mem-per-cpu=4G
-#SBATCH --time=08:30:00
-#SBATCH --cpus-per-task=6
+#SBATCH --time=48:30:00
+#SBATCH --cpus-per-task=4
 #SBATCH --job-name="giardia_assembly_qc_pilot"
 #SBATCH --chdir=/scratch/mdprieto/
-#SBATCH --output=jobs_output/%x_%j.out
+#SBATCH --output=jobs_output/%j_%x.out
 
 ###############################################################################################
 
@@ -18,14 +18,17 @@ CUSTOM_CONFIG="/project/60006/mdprieto/giardia_mlst_2023/scripts/eagle_bactopia.
 ###############################################################################################
 
 nextflow run bactopia/bactopia -r v3.0.0 \
--profile singularity \
---nfconfig $CUSTOM_CONFIG \
---samples $SAMPLESHEET \
---outdir /scratch/mdprieto/results/bactopia_giardia \
---shovill_assembler spades \
---skip_amr \
---long_reads \
---skip-prokka \
---skip_mlst
+    -profile singularity,slurm \
+    -resume \
+    --nfconfig $CUSTOM_CONFIG \
+    --samples $SAMPLESHEET \
+    --outdir /scratch/mdprieto/results/bactopia_giardia \
+    --shovill_assembler spades \
+    --skip_amr \
+    --long_reads \
+    --skip-prokka \
+    --skip_mlst \
+    --max_memory 90 \
+    --cleanup_workdir
 
 

@@ -1,10 +1,14 @@
-ll#!/bin/bash
+#!/bin/bash
 #SBATCH --mem-per-cpu=3G
-#SBATCH --time=24:00:00
+<<<<<<< HEAD
+#SBATCH --time=96:00:00
+=======
+#SBATCH --time=56:00:00
+>>>>>>> 8418fd8 (updates eagle config  with new profile and customized resources)
 #SBATCH --cpus-per-task=4
-#SBATCH --job-name="giardia_assembly_qc_full"
+#SBATCH --job-name="giardia_assembly_full"
 #SBATCH --chdir=/scratch/mdprieto/
-#SBATCH --output=jobs_output/%x_%j.out
+#SBATCH --output=jobs_output/%j_%x.out
 
 ###############################################################################################
 
@@ -12,19 +16,28 @@ ll#!/bin/bash
 module load nextflow apptainer
 
 # define environment variables for HPC
-SAMPLESHEET="/project/60006/mdprieto/giardia_mlst_2023/processed_data/eagle_bactopia.csv"
-CUSTOM_CONFIG="/project/60006/mdprieto/giardia_mlst_2023/scripts/eagle/eagle.config"
+SAMPLESHEET="/project/60006/mdprieto/giardia_mlst_2023/processed_data/bactopia_samplesheeet_eagle.csv"
+CUSTOM_CONFIG="/project/60006/mdprieto/giardia_mlst_2023/scripts/eagle_bactopia.config "
 
 ###############################################################################################
 
     # eagle has low space available in scratch, save temp files in another temporary workdir
-nextflow run bactopia/bactopia -r v2.2.0 \
-    -profile singularity \
+nextflow run bactopia/bactopia -r v3.0.0 \
+    -profile singularity,slurm \
     -resume \
-    -w /project/60006/mdprieto/nf_work_cache_giardia \
     --nfconfig $CUSTOM_CONFIG \
     --samples $SAMPLESHEET \
-    --outdir results/bactopia_giardia \
+    --outdir /scratch/mdprieto/results/bactopia_giardia \
     --shovill_assembler spades \
-    --skip_amr
+    --skip_amr \
+    --long_reads \
+    --skip-prokka \
+    --skip_mlst \
+<<<<<<< HEAD
+    --cleanup_workdir 
+=======
+    --max_memory 90 \
+    --cleanup_workdir \
+    --slurm_queue 'cpubase_bycore_b1'
+>>>>>>> 8418fd8 (updates eagle config  with new profile and customized resources)
 

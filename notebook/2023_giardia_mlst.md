@@ -405,26 +405,48 @@ sbatch /project/60006/mdprieto/giardia_mlst_2023/scripts/download_data_repositor
 ### 20231116 - Catch up with progress
 
 - Read all previous documentation, commited pending changes, and verified download of all datasets
+- I am verifying the assembly of all genomes (short and long reads) and the long-reads assembler is running out of memory (will increase to at least 32)
+  - Bactopia adjusts maximum memory to the one available in the primary job (the one that submits the other processes), so I set up `-profile slurm` to avoid that
+  - Also increased the maximum amount of memory to 48 for resubmitted jobs and standard runtime to 6h for assembly (was hanging)
+    - Must specify the target queue in eagle to avoid errors with the default parameters `--slurm_queue 'cpubase_bycore_b1'`
+      - NOTE: Above is not necessary as long as the `queue = 'cpubase_bycore_b1'` is added inside the process configuration for the slurm profile
 
+### 20231127 - Troubleshoot assembly pipeline
+
+- Implemented a new profile in bactopia.config that executes in slurm and increases resources for assembly while limiting the number of jobs submitted every minute.
+  - Pilot Bactopia running **WORKING**
+- Added bash script to produce bactopia samplesheet (`scripts/bin`) when needed
+
+### 20240116 - Reran pipeline
+
+- By mistake, the original results of assembly of all data were deleted. As no backup is available, I run the job again (`/scripts/assembly_and_qc.sh`)
 
 ## Progress and pending work
 
 ### Completed
 
 - Downloaded all Giardia Assemblage A and B genomes (Verified)
-- Produced standardized fasta assemblies using SPAdes
+- Produced standardized fasta assemblies using SPAdes (Verified)
 
-### To do
-
-- Verify data to publish in each process
+### Testing example
 
 ```sh
-CSV_FILE="/project/60006/mdprieto/giardia_mlst_2023/processed_data/cross_validation_input/pilot_long.csv"
-GIARDIA_NXF="/project/60006/mdprieto/giardia_mlst_2023/scripts/nextflow"
+SAMPLESHEET="/project/60006/mdprieto/giardia_mlst_2023/processed_data/pilot_bactopia_samplesheeet.csv"
+CUSTOM_CONFIG="/project/60006/mdprieto/giardia_mlst_2023/scripts/eagle_bactopia.config "
 
-  # cd ~/scratch
-nextflow run $GIARDIA_NXF/draft.nf \
-    -resume \
+###############################################################################################
+
+nextflow run bactopia/bactopia -r v3.0.0 \
     -profile singularity,slurm \
-    --csv_files $CSV_FILE
+    -resume \
+    --nfconfig $CUSTOM_CONFIG \
+    --samples $SAMPLESHEET \
+    --outdir /scratch/mdprieto/results/bactopia_giardia \
+    --shovill_assembler spades \
+    --skip_amr \
+    --long_reads \
+    --skip-prokka \
+    --skip_mlst \
+    --max_memory 90 \
+    --cleanup_workdir
 ```
