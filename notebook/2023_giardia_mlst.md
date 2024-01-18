@@ -392,7 +392,7 @@ withLabel: 'minmer_sketch|minmer_query' {
 
 NCBI accessions:
 
-- I cleaned the list of NCBI accessions to remove the reference genome for Giardia Assemblage A. This one is downloaded directly using `curl`. It is now ready for prediction with prodigal and also to be included in the MLST pipeline
+- I cleaned the list of NCBI accessions to remove the reference genome for Giardia Assemblage A. This one is downloaded directly using `curl`. It is now ready for prediction with prodigal and also to be included in the MLST pipeline [SRX5655623-30]
 - Updated all pathways in eagle as the folder structure has changed in the last couple of months. Also, no need to assemble reference genome, as it can be downloaded after polishing.
 - Updated version (1.10.1) of `fetchngs` is now working, described all steps to reproduce analysis in `./notebook/README.md`
   - Does not require `--force_sra_tools` option
@@ -420,6 +420,7 @@ sbatch /project/60006/mdprieto/giardia_mlst_2023/scripts/download_data_repositor
 ### 20240116 - Reran pipeline
 
 - By mistake, the original results of assembly of all data were deleted. As no backup is available, I run the job again (`/scripts/assembly_and_qc.sh`)
+- After tweaking the config file, I will verify how it runs in a pilot sample and then assemble the full batch
 
 ## Progress and pending work
 
