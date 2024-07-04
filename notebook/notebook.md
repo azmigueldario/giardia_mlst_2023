@@ -419,7 +419,8 @@ Implemented a new profile in bactopia.config that executes in slurm and increase
 
 Previously, a few (~20) genomes were missing from the final results. As the analysis was done several months before, I could not trace the reasons. After updating the parameters in nextflow to be less stringent in QC selection, I am running the assembly pipeline again.
 
-- Also did hybrid assembly for another 3 samples with ONT and Illumina data
+- Also did hybrid assembly for another 3 samples with ONT and Illumina data (brings the total number of assemblies by three)
+- These draft genomes were removed from the previous bactopia run manually to avoid duplication
 
 Also manually collected information about isolation time and data for all included `.fastq` files.
 

@@ -26,7 +26,7 @@ nextflow run bactopia/bactopia -r v3.0.0 \
     --ont /project/60006/mdprieto/raw_data/giardia/repositories/fastq/SRX6745908-SRR10007609.fastq.gz \
     -resume \
     --nfconfig /project/60006/mdprieto/giardia_mlst_2023/scripts/eagle_bactopia.config \
-    --outdir /scratch/mdprieto/results/bactopia_giardia_hybrid \
+    --outdir /scratch/mdprieto/results/bactopia_giardia/hybrid/ \
     --short_polish \
     --skip_amr \
     --skip-prokka \
@@ -36,13 +36,13 @@ nextflow run bactopia/bactopia -r v3.0.0 \
 
 nextflow run bactopia/bactopia -r v3.0.0 \
     -profile singularity,slurm \
-    --sample SAMN12610744 \
+    --sample SAMN12611509 \
     --r1 /project/60006/mdprieto/raw_data/giardia/repositories/fastq/SRX6745954_SRR10007650_1.fastq.gz \
     --r2 /project/60006/mdprieto/raw_data/giardia/repositories/fastq/SRX6745954_SRR10007650_2.fastq.gz \
     --ont /project/60006/mdprieto/raw_data/giardia/repositories/fastq/SRX6745952-SRR10007652.fastq.gz \
     -resume \
     --nfconfig /project/60006/mdprieto/giardia_mlst_2023/scripts/eagle_bactopia.config \
-    --outdir /scratch/mdprieto/results/bactopia_giardia_hybrid \
+    --outdir /scratch/mdprieto/results/bactopia_giardia/hybrid/  \
     --short_polish \
     --skip_amr \
     --skip-prokka \
@@ -52,13 +52,13 @@ nextflow run bactopia/bactopia -r v3.0.0 \
 
 nextflow run bactopia/bactopia -r v3.0.0 \
     -profile singularity,slurm \
-    --sample SAMN12610744 \
+    --sample SAMN12611599 \
     --r1 /project/60006/mdprieto/raw_data/giardia/repositories/fastq/SRX6746024_SRR10007722_1.fastq.gz \
     --r2 /project/60006/mdprieto/raw_data/giardia/repositories/fastq/SRX6746024_SRR10007722_2.fastq.gz \
     --ont /project/60006/mdprieto/raw_data/giardia/repositories/fastq/SRX6746022-SRR10007724.fastq.gz \
     -resume \
     --nfconfig /project/60006/mdprieto/giardia_mlst_2023/scripts/eagle_bactopia.config \
-    --outdir /scratch/mdprieto/results/bactopia_giardia_hybrid \
+    --outdir /scratch/mdprieto/results/bactopia_giardia/hybrid/  \
     --short_polish \
     --skip_amr \
     --skip-prokka \
