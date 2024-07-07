@@ -10,23 +10,49 @@ library(ggnetwork)
 # load(url("https://web.stanford.edu/class/bios221/data/dist2009c.RData"))
 # country09 = attr(dist2009c, "Label")
 
+###################################
 # Load data -----------------------
 
-cgmlst_data <- read_tsv("distance_pilot.tsv")
+cgmlst_alleles <- read_tsv("./processed_data/chewBBACA/cgMLST_call.tsv")
 
 cgmlst_metadata <- 
-  read_tsv("giardia_metadata.tsv") |> 
+  read_tsv("./processed_data/metadata/giardia_metadata.tsv") |> 
   filter(study_accession == "PRJNA280606") |> 
   mutate(label = paste0(location, "_", collection_date_year),
-         run_alias = str_replace_all(run_alias, "/", "_"))
+         run_alias = str_replace_all(run_alias, "/", "_")) |> 
+  select(id, location) 
+  
 
-left_join(cgmlst_data)
+
+trial_mst <- left_join(cgmlst_alleles, cgmlst_metadata, join_by(FILE == id)) 
+
+trial_mst |> 
+  relocate(location, .after = 1) |>
+  mutate(location =  replace_na(location, "other")) |> 
+  select(FILE, location) |> 
+  write_tsv("./output/trial_MST_metadata.tsv")
+
+
+cgmlst_hamming <- 
+  read_tsv("./scripts/cgmlst_hamming.tsv")
+
+###################################
+# Calculate distances ------------
+
+
+modded_alleles <- cgmlst_alleles |> 
+  column_to_rownames(var = "FILE")  
+cgmlst_dist  <- ape::dist.gene(modded_alleles) |> as.matrix()
+
+<- ape::dist.gene(cgmlst_alleles) 
+
+# left_join(cgmlst_data)
 
 cgmlst_metadata$run_alias 
-cgmlst_data$FILE
+cgmlst_alleles$FILE
 
   # Data must be transformed to reflect distances among observations
-cgmlst_dist <- dist(cgmlst_data)
+cgmlst_dist <- dist(cgmlst_data, )
 
 
 
