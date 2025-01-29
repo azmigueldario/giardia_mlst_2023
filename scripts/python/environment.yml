@@ -1,0 +1,15 @@
+name: tsne
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - scikit-learn
+  - pandas
+  - hdbscan
+  - numpy
+  - ipykernel
+  - ca-certificates
+  - openssl
+  - matplotlib
+prefix: /home/mdprieto/.conda/envs/tsne
