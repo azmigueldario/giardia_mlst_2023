@@ -6,10 +6,6 @@ library(igraph)
 library(ape)
 library(ggnetwork)
 
-## Data import and cleaning
-# load(url("https://web.stanford.edu/class/bios221/data/dist2009c.RData"))
-# country09 = attr(dist2009c, "Label")
-
 ###################################
 # Load data -----------------------
 

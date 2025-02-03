@@ -1,6 +1,6 @@
-# Giardia MLST creation and validation
+# Giardia core genome MLST creation and validation
 
-## General information
+## Project summary
 
 ### Background
 
@@ -19,9 +19,10 @@
 
 ### Objectives
 
-1. Find and retrieve all available genomes for Giardia intestinalis (Assemblages A and B)
+1. Find and retrieve all available genomes for _Giardia intestinalis_ (Assemblages A and B)
 2. Create a robust core-genome MLST scheme for future epidemiological analysis of outbreaks
     - Cross-validation of results given the small number of available datasets
+    - Evaluate the impact of overrepresented geographical locations in the resulting schema
 
 ### Glossary
 
@@ -43,24 +44,17 @@
 
 ## Repository/folder structure
 
+The repository contains the following branches:
+
 **_main_** contains tested scripts and results, will contain final pipeline
 **_dev_** is mainly for developing purposes and testing in eagle
-**_cedar_** is a local branch used in Compute Canada (Digital Research Alliance) for analysis
-
-To not overwrite local changes in **_cedar_** I will use the following snippet to update it:
-
-```sh
-git stash
-git merge <branch>
-git 
-```
 
 As usual, the project is divided in four main subdirectories and inside a github repository (<https://github.com/azmigueldario/giardia_mlst_2023>)
 
 - **notebook:** contains the _markdown_ file that documents all the advances and troubleshooting. It also contains a graph summarizing the analytical pipeline
 - **output:** contains all results from analysis
 - **processed_data:** is where all input samplesheets, input datasets, and relevant information to run the pipeline are located.
-  - **NOTE:** The _raw data_ for this project is saved outside the repository.
+  - The _raw data_ for this project is not contained in the repository but will be linked and made freely available.
 - **scripts:** contains all analytical scripts and workflows developed for this project
 
 ```sh
@@ -68,9 +62,11 @@ As usual, the project is divided in four main subdirectories and inside a github
 ├── notebook
 ├── output
 ├── processed_data
-│   └── cross_validation_input
+│   └── accessions
+│   └── bactopia
+│   └── metadata
 └── scripts
-    └── nextflow
+    └── python
 ```
 
 ### Accessions of available data (verified 20230316)
@@ -83,43 +79,6 @@ assemblages A or B. Initial possible projects include:
 3. JXTI00000000 (primary assembly SE reads using 454 technology)
 4. [SAMN12878171](https://www.ebi.ac.uk/ena/browser/view/SAMN12878171)  
 
-### Environment setup
-
-```sh
-#################################### Eagle ####################################
-
-# request interactive session for development
-salloc --time=06:00:00 --ntasks=1 --cpus-per-task=8  --mem-per-cpu=10G 
-
-#################################### Cedar ####################################
-
-# interactive allocation
-salloc --time=2:00:0 --ntasks=1 --cpus-per-task=8  --mem-per-cpu=8G --account=def-whsiao-ab
-```
-
-### Testing example
-
-```sh
-SAMPLESHEET="/project/60006/mdprieto/giardia_mlst_2023/processed_data/pilot_bactopia_samplesheeet.csv"
-CUSTOM_CONFIG="/project/60006/mdprieto/giardia_mlst_2023/scripts/eagle_bactopia.config "
-
-###############################################################################################
-
-nextflow run bactopia/bactopia -r v3.0.0 \
-    -profile singularity,slurm \
-    -resume \
-    --nfconfig $CUSTOM_CONFIG \
-    --samples $SAMPLESHEET \
-    --outdir /scratch/mdprieto/results/bactopia_giardia \
-    --shovill_assembler spades \
-    --skip_amr \
-    --long_reads \
-    --skip-prokka \
-    --skip_mlst \
-    --max_memory 90 \
-    --cleanup_workdir
-
-```
 
 ## Notebook notes
 
@@ -423,10 +382,3 @@ Previously, a few (~20) genomes were missing from the final results. As the anal
 - These draft genomes were removed from the previous bactopia run manually to avoid duplication
 
 Also manually collected information about isolation time and data for all included `.fastq` files.
-
-## Completed and pending steps
-
-**Completed:**
-
-- Downloaded all Giardia Assemblage A and B genomes (Verified)
-- Produced standardized fasta assemblies using SPAdes (Verified)
