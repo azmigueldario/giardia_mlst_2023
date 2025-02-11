@@ -1,5 +1,5 @@
 ###################################################
-############### macOS 
+############### macOS ############################
 
 # General
 .DS_Store
@@ -30,7 +30,7 @@ Icon
 $*
 
 ###################################################
-############### Jupyter and python
+############### Jupyter and python ###############
 
 # jupyter temp files
 .ipynb_checkpoints
@@ -201,8 +201,8 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-###################################################
-############### Ignore data files and directories
+################################################################
+############### Ignore data files and directories ##############
 
 *.dat
 *.efx
@@ -215,16 +215,17 @@ cython_debug/
 *.tax2010
 *.vcf
 *.xml
-*raw_data
+*.fna.sig
 
-###################################################
-############### Ignore Nextflow and testing files
+
+################################################################
+############### Ignore Nextflow and testing files ##############
 
 *.nextflow*
 *cross_validation_input*
 
-###################################################
-############### R and R-studio
+################################################################
+############### R and R-studio #################################
 
 # History files
 .Rhistory
