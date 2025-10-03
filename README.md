@@ -47,6 +47,33 @@ scripts/cedar/full_assembly_and_qc.sh
 
 ## Prepare datasets for cross-validation
 
+### Clustering and subsampling
 
+## Cross validation of cgMLST calling using nf-chewBBACA
 
-## Cross validation of cgMLST calling using chewBBACA
+### Calculate final cgMLST distances
+
+```sh
+# HQ samples
+python3 scripts/python/6_mlst2dist.py \
+    processed_data/nf_chewbbaca/full/cgMLST90.tsv \
+    processed_data/nf_chewbbaca/full/cgMLST90_distances.tsv \
+    --outfmt 'TSV'
+
+# clustered samples
+python3 scripts/python/6_mlst2dist.py \
+    processed_data/nf_chewbbaca/clustered/cgMLST90.tsv \
+    processed_data/nf_chewbbaca/clustered/cgMLST90_distances.tsv \
+    --outfmt 'TSV'
+```
+
+### Minimum spanning tree
+
+The `grapetree` tool is ideal to produce and manipulate the plot parameters of a minimum spanning tree.
+
+- To reproduce the conda environment for this tool, use the requirements file: `scripts/python/grapetree.yml`
+- The IDE is started by running the `grapetree` command and takes as input:
+  - A profile tab-delimited file (like `processed_data/nf_chewbbaca/clustered/cgMLST90.tsv`)
+  - A metadata file to customize the MST presentation (`processed_data/metadata/giardia_metadata.tsv`)
+
+Our plots have branches in Log-scale to avoid overcrowding, are colored by sampling location, and collapse into nodes samples with less than 60 alleles of separation
