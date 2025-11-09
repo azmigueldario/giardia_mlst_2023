@@ -21,5 +21,5 @@ cd ~/scratch/ &&
     nextflow run $NF_CHEW/main.nf \
     -resume \
     -profile singularity \
-    -c /project/60006/mdprieto/nf_chewbacca_mlst/test/eagle.config \
+    -config /project/60006/mdprieto/nf_chewbacca_mlst/test/eagle.config \
     -with-trace

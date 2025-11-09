@@ -2,14 +2,16 @@
 
 ## Approach
 
-- Collect publicly available and in-house genomes of Assemblages A an B.
-- Normalize and apply quality control tools to raw reads
-- Produce annotated and verified genomes for all parasites
-- Apply Chewbacca tool to define a core-genome MLST approach
+- Collected publicly available and in-house sequenced genomes of Assemblages A an B (`nfcore-fetchngs`)
+- Normalized and performed quality control in raw reads to prune fragmented and low quality assemblies (`fastQC + multiQC`)
+- Define assemblage of parasites by comprosite (`samtools`)
+- Create nextflow pipeline with `chewBBACA` tool commands to define a core-genome MLST schema and evalute it
+- Sensitivity analysis 1: subsampled input genomes to reduce overrepresentation of BC, Canada genomes and re-ran nextflow chewBBACA pipeline (`mash + t-SNE + HDBSCAN`)
+- Sensitivity analysis 2: created phylogenetic trees for the same input genomes used in the cgMLST schema using classic 3 or 6-loci schemas (`chewBBACA + MAFFT + IQTREE`)
 
 ## Datasets
 
-Secondary data analysis project to produce a core-genome multi-locus sequence typing (MLST) approach to _Giardia duodenalis_ assemblages A and B parasites
+Secondary data analysis of Giardia intestinalis assembles A and B (parasites of human interest) to produce a core-genome multi-locus sequence typing (MLST) schema
 
 ## Analysis steps
 
@@ -24,7 +26,40 @@ Secondary data analysis project to produce a core-genome multi-locus sequence ty
 
 ## Repository organization
 
-## Usage (v0.1)
+Every analysis folder contains, if applicable, a `README.md` file and instructions to reproduce the computing environment. 
+
+```sh
+.
+├── notebook
+├── output
+│   ├── genomes_list
+│   ├── nf_chewbbaca
+│   ├── quast
+│   └── smash
+├── processed_data
+│   ├── accessions
+│   ├── bactopia_samplesheets
+│   └── metadata
+└── scripts
+    ├── classic_schemas
+    ├── clustering_tsne
+    ├── data_processing_assembly
+    ├── nf_chewbbaca
+    └── plots_dowstream_analysis
+```
+
+## Usage (v0.2)
+
+## Data retrieval and cleaning of metadata
+
+Download data and sample-level metadata using the `nfcore-fetchngs` pipeline.
+Curl was used to obtain reference sequences and reference annotation.
+
+```sh
+./scripts/data_processing_assembly/download_data_repositories.sh
+```
+
+
 
 ## Genome assembly and quality selection
 
@@ -76,4 +111,4 @@ The `grapetree` tool is ideal to produce and manipulate the plot parameters of a
   - A profile tab-delimited file (like `processed_data/nf_chewbbaca/clustered/cgMLST90.tsv`)
   - A metadata file to customize the MST presentation (`processed_data/metadata/giardia_metadata.tsv`)
 
-Our plots have branches in Log-scale to avoid overcrowding, are colored by sampling location, and collapse into nodes samples with less than 60 alleles of separation
+Our plots have branches in Log-scale to avoid overcrowding, are colored by sampling location, and collapse into a single node samples with less than 60 alleles of separation.
