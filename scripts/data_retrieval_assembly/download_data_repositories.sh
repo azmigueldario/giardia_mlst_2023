@@ -12,19 +12,20 @@
 module load apptainer nextflow
 
 # define INPUT list and OUTPUT directory
-ACCESIONS="/project/60006/mdprieto/giardia_mlst_2023/processed_data/accessions"
-BIOR_GENOMES="/project/60006/mdprieto/raw_data/giardia/"
-OUTDIR="/mnt/cidgoh-object-storage/database/reference_genomes/giardia/assemblage_A"
+project_root="/project/60006/mdprieto/giardia_mlst_2023/"
+accessions="${project_root}/processed_data/accessions"
+insdc_genomes="${project_root}/input_data/giardia/repositories"
+outdir_ref="/mnt/cidgoh-object-storage/database/reference_genomes/giardia/assemblage_A"
 
 # merge all accessions into single file
-cat $ACCESIONS/ACC_BCCDC.txt $ACCESIONS/SRR_ACC_list.txt > $ACCESIONS/ALL_ACC.csv
+cat $accessions/ACC_BCCDC.txt $accessions/SRR_ACC_list.txt > $accessions/ALL_ACC.csv
 
 ####################################  Download #####################################################
 
 # download fastq data
 nextflow run nf-core/fetchngs -r 1.10.1 \
-    --input "$ACCESIONS/ALL_ACC.csv" \
-    --outdir $BIOR_GENOMES \
+    --input "${accessions}/ALL_ACC.csv" \
+    --outdir ${insdc_genomes} \
     -profile singularity \
     --nf_core_pipeline 'taxprofiler' \
     -resume
@@ -33,10 +34,10 @@ nextflow run nf-core/fetchngs -r 1.10.1 \
 
 # download chromosome level assembly of giardia Duodenalis (Illumina + PacBio)
 curl https://ftp.ncbi.nlm.nih.gov/genomes/refseq/protozoa/Giardia_intestinalis/latest_assembly_versions/GCF_000002435.2_UU_WB_2.1/GCF_000002435.2_UU_WB_2.1_genomic.fna.gz \
-    --output  ${OUTDIR}/GCF_000002435.2_UU_WB_2.1_genomic.fna
+    --output  ${outdir_ref}/GCF_000002435.2_UU_WB_2.1_genomic.fna
 curl https://ftp.ncbi.nlm.nih.gov/genomes/refseq/protozoa/Giardia_intestinalis/latest_assembly_versions/GCF_000002435.2_UU_WB_2.1/GCF_000002435.2_UU_WB_2.1_genomic.gff.gz \
-    --output  ${OUTDIR}/GCF_000002435.2_UU_WB_2.1_genomic.gff
+    --output  ${outdir_ref}/GCF_000002435.2_UU_WB_2.1_genomic.gff
 
 # leave a copy of ref genome (for pipeline) in a fasta subdirectory of the repository accessions
-mkdir -p ${BIOR_GENOMES}/fasta && \
-    cp ${OUTDIR}/GCF_000002435.2_UU_WB_2.1_genomic.fna $BIOR_GENOMES/fasta/
+mkdir -p ${insdc_genomes}/wb_reference && \
+    cp ${outdir_ref}/GCF_000002435.2_UU_WB_2.1_genomic.fna $(insdc_genomes)/wb_reference

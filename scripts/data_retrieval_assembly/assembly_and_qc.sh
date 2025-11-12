@@ -8,12 +8,14 @@
 
 ###############################################################################################
 
-# load modules
+# load modules/dependencies
 module load nextflow apptainer
 
 # define environment variables for HPC
-SAMPLESHEET="/project/60006/mdprieto/giardia_mlst_2023/processed_data/bactopia_samplesheet.csv"
-CUSTOM_CONFIG="/project/60006/mdprieto/giardia_mlst_2023/scripts/eagle_bactopia.config"
+project_root="/project/60006/mdprieto/giardia_mlst_2023/"
+samplesheet="${project_root}/processed_data/bactopia_samplesheets/bactopia_samplesheet.csv"
+custom_config="${project_root}scripts/eagle_bactopia.config"
+outdir="${HOME}/scratch/results/bactopia_giardia_2"
 
 ###############################################################################################
 
@@ -21,9 +23,9 @@ CUSTOM_CONFIG="/project/60006/mdprieto/giardia_mlst_2023/scripts/eagle_bactopia.
 nextflow run bactopia/bactopia -r v3.0.0 \
     -profile singularity,slurm \
     -resume \
-    --nfconfig $CUSTOM_CONFIG \
-    --samples $SAMPLESHEET \
-    --outdir /scratch/mdprieto/results/bactopia_giardia_2 \
+    --nfconfig ${custom_config} \
+    --samples ${samplesheet} \
+    --outdir ${outdir} \
     --shovill_assembler spades \
     --skip_amr \
     --long_reads \

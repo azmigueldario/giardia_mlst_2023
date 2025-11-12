@@ -3,26 +3,16 @@
 ## Approach
 
 - Collected publicly available and in-house sequenced genomes of Assemblages A an B (`nfcore-fetchngs`)
-- Normalized and performed quality control in raw reads to prune fragmented and low quality assemblies (`fastQC + multiQC`)
-- Define assemblage of parasites by comprosite (`samtools`)
-- Create nextflow pipeline with `chewBBACA` tool commands to define a core-genome MLST schema and evalute it
+- Normalized and performed quality control in raw reads to prune low quality input  (`fastQC + multiQC`)
+- Standardized approach to genome assembly and quality control using [Bactopia](https://github.com/bactopia/bactopia) with independent runs for Illumina short reads and hybrid (Illumina + ONT) assemblies  
+- Define assemblage of parasites by comprosite mapping draft assemblies against references of both assemblages (`samtools`)
+- Create nextflow pipeline with `chewBBACA` tool commands to define a core-genome MLST schema and evalute it in a minimum spanning tree (`grapetree`)
 - Sensitivity analysis 1: subsampled input genomes to reduce overrepresentation of BC, Canada genomes and re-ran nextflow chewBBACA pipeline (`mash + t-SNE + HDBSCAN`)
 - Sensitivity analysis 2: created phylogenetic trees for the same input genomes used in the cgMLST schema using classic 3 or 6-loci schemas (`chewBBACA + MAFFT + IQTREE`)
 
 ## Datasets
 
-Secondary data analysis of Giardia intestinalis assembles A and B (parasites of human interest) to produce a core-genome multi-locus sequence typing (MLST) schema
-
-## Analysis steps
-
-1. Obtain the datasets
-2. Standardized approach to assembly of the datasets and assembly QC
-3. Calculate genomic distances using `mash` sketches
-4. Filter out some assemblies based on quality QC and clustering **[t-sne and HDBSCAN]**
-5. Run nextflow pipeline **[chewBBACA + crossvalidation]**
-6. Obtain hamming distances of cgMLST calls
-7. Evaluate annotation and quality of schema
-8. Produce minimum spanning tree
+Secondary data analysis of Giardia intestinalis assembles A and B (parasites of human interest) to produce a core-genome multi-locus sequence typing (MLST) schema. The sequencing files were obtained through a comprehensive search of the INSDC in November 2024 (`PRJNA561185`, `PRJNA280606` and `PRJEB3213`)
 
 ## Repository organization
 
@@ -48,36 +38,31 @@ Every analysis folder contains, if applicable, a `README.md` file and instructio
     └── plots_dowstream_analysis
 ```
 
-## Usage (v0.2)
+## Usage (v0.3)
 
 ## Data retrieval and cleaning of metadata
 
-Download data and sample-level metadata using the `nfcore-fetchngs` pipeline.
-Curl was used to obtain reference sequences and reference annotation.
+Download data and sample-level metadata using the `nfcore-fetchngs` pipeline. A custom output path can be specified by modifying the variable `insdc_genomes`.
+A simple `curl` command was used to obtain reference sequences and reference annotation from the NCBI accession **GCF_000002435.2**
 
 ```sh
 ./scripts/data_processing_assembly/download_data_repositories.sh
 ```
 
-
-
 ## Genome assembly and quality selection
 
-All illumina genomes are assembled using **Shovill** and **Spades**, with default configuration. Using the results from Quality Control (QC) of the assemblies, the contigs below a threshold and overall poor quality draft genomes will be removed before cgMLST analysis. Samples with hybrid assembly are also processed by bactopia and typically yield better results. 
+All illumina genomes are assembled using **Shovill** and **Spades**, with default configuration, inside the **Bactopia** nextflow pipeline. Using the results from the assembly Quality Control (QC) uisng **QUAST**, the contigs below a threshold and overall poor quality draft genomes will be removed before cgMLST analysis. Samples with hybrid assembly are independently processed and assembled with **Bactopia**. 
 
-- Download all raw sequences from NCBI. The script requires nextflow and singularity (Apptainer). It uses NCBI tools, which are notoriously inconsistent, so try a few times if necessary.
-- Everything will be downloaded to the PATH you specify as `BIOR_GENOMES`
+- For this project, we run **Bactopia v3.0.0** and use Apptainer/Singularity containers to run the commands in a HPC. Before creating the input samplesheet, we sanitized the filenames to remove low hypens "_" as they produce conflicts with the parsing logic of **Bactopia**.
 
-```sh
-./scripts/download_data_repositories.sh
-```
-
-- Create a samplesheet for input to the assembly and QC pipeline (Bactopia). We use the python package that complements bactopia, made available through a [Singularity image of Bactopia v3.0](https://depot.galaxyproject.org/singularity/bactopia%3A3.0.0--hdfd78af_0).
-    1. Some files may have name conventions that make it harder for the script to read, so make sure that there are no low hyphens "_"
+- To create the samplesheet it is recommended to run the command `bactopia prepare --path /path/to/fastqs`, which is available in the conda environment of the **Bactopia** tool. As **Conda** is not available in my HPC, I used a container image that has the Bactopia conda environment inside.
 
 ```sh
-# readsQC, assembly, assemblyQC
-scripts/cedar/full_assembly_and_qc.sh
+# Illumina only reads
+./scripts/data_retrieval_assembly/assembly_and_qc.sh
+
+# Samples with hybrid sequencing
+./scripts/data_retrieval_assembly/hybrid_assembly.sh
 ```
 
 ## Prepare datasets for cross-validation

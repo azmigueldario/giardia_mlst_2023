@@ -15,6 +15,7 @@ awk 'BEGIN {FS=OFS="\t"} NR>1 {print $4}' metadata/new_metadata.tsv
 
 esearch -db sra -query SAMEA2018796 | efetch -format runinfo | head -n 1 > metadata_edirect.csv
 
+
 for i in $(cat giardia_accs.txt)
 do 
     esearch -db sra -query $i | efetch -format runinfo | tail -1 >> metadata_edirect.csv
