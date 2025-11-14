@@ -40,7 +40,7 @@ Every analysis folder contains, if applicable, a `README.md` file and instructio
 
 ## Usage (v0.3)
 
-## Data retrieval and cleaning of metadata
+## 1. Data retrieval and cleaning of metadata
 
 Download data and sample-level metadata using the `nfcore-fetchngs` pipeline. A custom output path can be specified by modifying the variable `insdc_genomes`.
 A simple `curl` command was used to obtain reference sequences and reference annotation from the NCBI accession **GCF_000002435.2**
@@ -49,7 +49,7 @@ A simple `curl` command was used to obtain reference sequences and reference ann
 ./scripts/data_processing_assembly/download_data_repositories.sh
 ```
 
-## Genome assembly and quality selection
+## 2. Genome assembly and quality selection
 
 All illumina genomes are assembled using **Shovill** and **Spades**, with default configuration, inside the **Bactopia** nextflow pipeline. Using the results from the assembly Quality Control (QC) uisng **QUAST**, the contigs below a threshold and overall poor quality draft genomes will be removed before cgMLST analysis. Samples with hybrid assembly are independently processed and assembled with **Bactopia**. 
 
@@ -65,7 +65,9 @@ All illumina genomes are assembled using **Shovill** and **Spades**, with defaul
 ./scripts/data_retrieval_assembly/hybrid_assembly.sh
 ```
 
-## Prepare datasets for cross-validation
+## 3. Prepare datasets for cross-validation
+
+First, we review the results of the assembly process and prune the samples that have low N50 (<30,000), a large number of contigs (n > 1300), or a genome size 
 
 ### Clustering and subsampling
 
