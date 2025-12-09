@@ -12,9 +12,9 @@
 module load nextflow apptainer
 
 # define environment variables for HPC
-project_root="/project/60006/mdprieto/giardia_mlst_2023/"
-samplesheet="${project_root}/processed_data/bactopia_samplesheets/bactopia_samplesheet.csv"
-custom_config="${project_root}scripts/eagle_bactopia.config"
+project_repo="/project/60006/mdprieto/giardia_mlst_2023/"
+samplesheet="${project_repo}/processed_data/bactopia_samplesheets/bactopia_samplesheet.csv"
+custom_config="${project_repo}scripts/eagle_bactopia.config"
 outdir="${HOME}/scratch/results/bactopia_giardia"
 
 ###############################################################################################

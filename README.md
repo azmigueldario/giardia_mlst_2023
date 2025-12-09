@@ -43,19 +43,26 @@ Every analysis folder contains, if applicable, a `README.md` file and instructio
 ## 1. Data retrieval and cleaning of metadata
 
 Download data and sample-level metadata using the `nfcore-fetchngs` pipeline. A custom output path can be specified by modifying the variable `insdc_genomes`.
-A simple `curl` command was used to obtain reference sequences and reference annotation from the NCBI accession **GCF_000002435.2**
+A simple `curl` command was used to obtain reference sequences and reference annotation from the NCBI accession **GCF_000002435.2** and from another set of high quality hybrid assemblies combining PacBio + Illumina
 
 ```sh
-./scripts/data_processing_assembly/download_data_repositories.sh
+./scripts/data_retrieval_assembly/download_data_repositories.sh
 ```
 
 ## 2. Genome assembly and quality selection
 
+For this project, we run **Bactopia v3.0.0** and use Apptainer/Singularity containers to run the commands in a HPC. Before creating the input samplesheet, we sanitized the filenames to remove low hypens "_" as they produce conflicts with the parsing logic of **Bactopia**.
+
+- To create the samplesheet it is recommended to run the command `bactopia prepare --path /path/to/fastqs`, which is available in the conda environment of the **Bactopia** tool. If **Conda** is not available, you can use a Bactopia container image to run the command.
+
+```sh
+bactopia_img="/path/t0/bactopia/apptainer.sif"
+apptainer exec --cleanenv ${bactopia_img} \
+    bactopia prepare \
+        --path $insdc_genomes/fastq/
+```
+
 All illumina genomes are assembled using **Shovill** and **Spades**, with default configuration, inside the **Bactopia** nextflow pipeline. Using the results from the assembly Quality Control (QC) uisng **QUAST**, the contigs below a threshold and overall poor quality draft genomes will be removed before cgMLST analysis. Samples with hybrid assembly are independently processed and assembled with **Bactopia**. 
-
-- For this project, we run **Bactopia v3.0.0** and use Apptainer/Singularity containers to run the commands in a HPC. Before creating the input samplesheet, we sanitized the filenames to remove low hypens "_" as they produce conflicts with the parsing logic of **Bactopia**.
-
-- To create the samplesheet it is recommended to run the command `bactopia prepare --path /path/to/fastqs`, which is available in the conda environment of the **Bactopia** tool. As **Conda** is not available in my HPC, I used a container image that has the Bactopia conda environment inside.
 
 ```sh
 # Illumina only reads
@@ -68,6 +75,9 @@ All illumina genomes are assembled using **Shovill** and **Spades**, with defaul
 ## 3. Prepare datasets for cross-validation
 
 First, we review the results of the assembly process and prune the samples that have low N50 (<30,000), a large number of contigs (n > 1300), or a genome size 
+
+
+
 
 ### Clustering and subsampling
 
