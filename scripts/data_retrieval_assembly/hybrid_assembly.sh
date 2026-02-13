@@ -9,13 +9,13 @@
 ###############################################################################################
 
 # load modules/dependencies
-module load nextflow apptainer
+module load StdEnv/2023 nextflow/25.04.6 apptainer/1.4.5
 
 # define environment variables for HPC
-project_root="/project/60006/mdprieto/giardia_mlst_2023"
-hydrid_fastq_dir="${project_root}/input_data/giardia/repositories/fastq"
-custom_config="${project_root}scripts/data_retrieval_assembly/eagle_bactopia.config"
-outdir_hybrid="${HOME}/scratch/results/bactopia_giardia/hybrid"
+project_repo="/project/60006/mdprieto/giardia_mlst_2023"
+hydrid_fastq_dir="${project_repo}/input_data/giardia/repositories/fastq"
+custom_config="${project_repo}scripts/data_retrieval_assembly/eagle_bactopia.config"
+outdir="${HOME}/scratch/results/bactopia_giardia_2025"
 
 ###############################################################################################
 
@@ -27,7 +27,6 @@ nextflow run bactopia/bactopia -r v3.0.0 \
     --r1 ${hydrid_fastq_dir}/SRX6745910_SRR10007607_1.fastq.gz \
     --r2 ${hydrid_fastq_dir}/SRX6745910_SRR10007607_2.fastq.gz \
     --ont ${hydrid_fastq_dir}/SRX6745908-SRR10007609.fastq.gz \
-    -resume \
     --nfconfig ${custom_config} \
     --outdir ${outdir_hybrid} \
     --short_polish \
@@ -43,7 +42,6 @@ nextflow run bactopia/bactopia -r v3.0.0 \
     --r1 ${hydrid_fastq_dir}/SRX6746024_SRR10007722_1.fastq.gz \
     --r2 ${hydrid_fastq_dir}/SRX6746024_SRR10007722_2.fastq.gz \
     --ont ${hydrid_fastq_dir}/SRX6746022-SRR10007724.fastq.gz \
-    -resume \
     --nfconfig ${custom_config} \
     --outdir ${outdir_hybrid} \
     --short_polish \
