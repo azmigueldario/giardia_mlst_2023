@@ -84,9 +84,6 @@ All illumina genomes are assembled using **Shovill** and **Spades**, with defaul
 
 First, we review the results of the assembly process and prune the samples that have low N50 (<30,000), a large number of contigs (n > 1300), or a genome size outside the range of the reference assembly (+/- 20%)
 
-
-
-
 ### Clustering and subsampling
 
 ## Cross validation of cgMLST calling using nf-chewBBACA
