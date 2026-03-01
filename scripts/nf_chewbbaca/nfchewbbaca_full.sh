@@ -11,13 +11,13 @@
 ##############################################################################################
 
 # set dependencies
-module load StdEnv/2023 nextflow/25.04.6 apptainer/1.4.5
+module load StdEnv/2023 nextflow/25.10.2 apptainer/1.4.5
 
 # paths
 giardia_project_repo="/project/60006/mdprieto/giardia_mlst_2023"
 input_samplesheet="${giardia_project_repo}/processed_data/nf_chewbbaca_samplesheets/hq_samplesheet_2025.csv"
 nf_config_file="${giardia_project_repo}/scripts/nf_chewbbaca/nf_configs/eagle_chewbbaca.config"
-outdir="${giardia_project_repo}/output/nf_chewbbaca/nf_chewbbaca_pilot_feb2026"
+outdir="/home/mdprieto/scratch/pilot_results/nf_chewbbaca_pilot_feb2026"
 
 # set manually
 nf_chewbbaca_repo="/home/mdprieto/mdp_projects/nf_chewbacca_mlst"
@@ -34,16 +34,15 @@ head -n 21 $input_samplesheet > pilot_samplesheet_chewbbaca.csv
 if [[ -s pilot_samplesheet_chewbbaca.csv ]]
 then
     cat pilot_samplesheet_chewbbaca.csv > active_samplesheet.csv
+    rm pilot_samplesheet_chewbbaca.csv
 else
     cat $input_samplesheet > active_samplesheet.csv
-    rm pilot_samplesheet_chewbbaca.csv
 fi
 
 # nextflow run
 nextflow run $nf_chewbbaca_repo/main.nf \
     -resume \
     -profile singularity,slurm \
-    -with-trace "${outdir}" \
     -config ${nf_config_file} \
     --input_samplesheet active_samplesheet.csv \
     --outdir ${outdir} \
