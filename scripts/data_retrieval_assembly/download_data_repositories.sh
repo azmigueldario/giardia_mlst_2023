@@ -1,64 +1,87 @@
 #!/bin/bash                                 
 #SBATCH --mem-per-cpu=6G                    
-#SBATCH --time=09:30:00                     
-#SBATCH --cpus-per-task=6                  
+#SBATCH --time=20:30:00                     
+#SBATCH --cpus-per-task=8
 #SBATCH --job-name="sra_download_giardia"           
 #SBATCH --chdir=/scratch/mdprieto/          
 #SBATCH --output=jobs_output/giardia_assembly/%x_%j.out 
 
-#########################################################################################################
-#                        Preparation 
-#########################################################################################################
+#========================================================================================================
+#
+#                   DOWNLOAD RAW SEQUENCING READS FROM BIOREPOSITORIES
+#
+#========================================================================================================
 
-# load necessary modules
-module load apptainer nextflow
+#--------------------------------------------------------------------------------------------------------
+#                           Preparation 
+#--------------------------------------------------------------------------------------------------------
 
-# define INPUT list and OUTPUT directory
-project_repo="/project/60006/mdprieto/giardia_mlst_2023/"
-accessions="${project_repo}/processed_data/accessions"
-insdc_genomes="${project_repo}/input_data/giardia/test"
-outdir_ref="${insdc_genomes}/../assemblage_A"
+# Load modules
+module load StdEnv/2023 nextflow/25.04.6 apptainer/1.4.5
 
-# path to sra-tools image
-sra_tools_container="/scratch/group_share/singularity_imgs/depot.galaxyproject.org-singularity-sra-tools-3.2.1--h4304569_1.sif"
+# Determine script directory (SLURM or local)
+set -euo pipefail
+if [[ -n "${SLURM_SUBMIT_DIR:-}" ]]; then
+    script_dir="${SLURM_SUBMIT_DIR}"
+else
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+fi
 
-# merge all accessions into single file
-cat ${accessions}/BCCDC_accessions.txt ${accessions}/SRR_accessions_2025.csv > ${accessions}/all_accessions_2025.csv
+# Import configuration
+source "${script_dir}/../../config_paths.sh"
 
-# ncbi datasets image
-sra_tools_img="project/60006/mdprieto/giardia_mlst_2023/sra-tools_latest.sif "
+#------------------------------------------------------------------------------------------------------
+#                           SRA tools commands
+#------------------------------------------------------------------------------------------------------
 
-# make directories if necessary
-mkdir -p ${insdc_genomes} ${outdir_ref}
+# Merge all accessions into single file
+cat "${accessions_dir}/BCCDC_accessions.txt" "${accessions_dir}/SRR_accessions_2025.csv" > "${accessions_dir}/all_accessions_2025.csv"
 
-#########################################################################################################
-#                           Download paired-end reads using SRA tools
-#########################################################################################################
+# Make directories if necessary
+mkdir -p "${raw_reads_dir}" 
+mkdir -p "${reference_genome}"
+mkdir -p "${scratch_tmp_folder}/sra_tmp"
 
-# download fastq data
+# Download fastq data and compress it
 while read -r SRR; do
-    echo "Downloading $SRR..."
+
+    # Download only if not available locally
+    if ls "${raw_reads_dir}/${SRR}"*.fastq.gz >/dev/null 2>&1; then
+        echo "Skipping ${SRR}: already downloaded and compressed."
+        continue
+    fi
     
-    apptainer exec ${sra_tools_container} \
+    echo "Downloading ${SRR}..."
+    apptainer exec "${sra_tools_container}" \
         fasterq-dump \
         --split-files \
-        --outdir raw_fastqs \
-        --threads 6 \
-        --progress \
-        $SRR
+        --outdir "${raw_reads_dir}" \
+        --threads 7 \
+        --temp "${scratch_tmp_folder}/sra_tmp" \
+        --mem 4GB \
+        --force \
+        "${SRR}" < /dev/null || { 
+            echo "ERROR: Failed to download ${SRR}. Skipping to next..."
+            continue 
+        }
+
+    echo "Compressing ${SRR}..."
+    pigz \
+        --force \
+        --processes 8 \
+        "${raw_reads_dir}/${SRR}"*.fastq
         
-done < ${accessions}/all_accessions_2025.csv
+done < "${accessions_dir}/all_accessions_2025.csv"
 
-#########################################################################################################
-#                               Reference genome
-#########################################################################################################
+#-------------------------------------------------------------------------------------------------------
+#                           Reference genome
+#-------------------------------------------------------------------------------------------------------
 
-# download chromosome level assembly of giardia Duodenalis (Illumina + PacBio)
-curl https://ftp.ncbi.nlm.nih.gov/genomes/refseq/protozoa/Giardia_intestinalis/latest_assembly_versions/GCF_000002435.2_UU_WB_2.1/GCF_000002435.2_UU_WB_2.1_genomic.fna.gz \
-    --output  ${outdir_ref}/GCF_000002435.2_UU_WB_2.1_genomic.fna
-curl https://ftp.ncbi.nlm.nih.gov/genomes/refseq/protozoa/Giardia_intestinalis/latest_assembly_versions/GCF_000002435.2_UU_WB_2.1/GCF_000002435.2_UU_WB_2.1_genomic.gff.gz \
-    --output  ${outdir_ref}/GCF_000002435.2_UU_WB_2.1_genomic.gff
-
-# leave a copy of ref genome (for pipeline) in a fasta subdirectory of the repository accessions
-mkdir -p ${insdc_genomes}/wb_reference && \
-    cp ${outdir_ref}/GCF_000002435.2_UU_WB_2.1_genomic.fna $(insdc_genomes)/wb_reference
+# Download chromosome level assembly of giardia Duodenalis (Illumina + PacBio)
+curl \
+    --silent \
+    --show-error \
+    --location \
+    --fail \
+    https://ftp.ncbi.nlm.nih.gov/genomes/refseq/protozoa/Giardia_duodenalis/latest_assembly_versions/GCF_000002435.2_UU_WB_2.1/GCF_000002435.2_UU_WB_2.1_genomic.fna.gz \
+    > "${reference_genome}/GCF_000002435.2_UU_WB_2.1_genomic.fna.gz"

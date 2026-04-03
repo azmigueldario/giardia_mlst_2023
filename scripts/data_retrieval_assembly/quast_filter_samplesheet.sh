@@ -11,12 +11,12 @@
 #########################################################################################################
 
 # load modules
-module load StdEnv/2020 gcc/9.3.0 quast/5.2.0 csvtk/0.23.0 apptainer/1.4.5
+module load StdEnv/2023 gcc/14.3.0 quast/5.2.0 csvtk/0.23.0 apptainer/1.4.5
 
 # define environment variables for HPC
 project_repo="/project/60006/mdprieto/giardia_mlst_2023"
-bactopia_results="/scratch/mdprieto/results/bactopia_giardia_feb2025"
-paths="./assembly_list.txt"
+bactopia_results="/scratch/mdprieto/results/giardia_project/bactopia_giardia_feb2025/"
+paths="${project_repo}/output/assembly_list.txt"
 outdir_quast="${project_repo}/output/quast_output"
 
 # define path to singularity image for quast

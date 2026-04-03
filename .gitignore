@@ -1,5 +1,6 @@
-###################################################
-############### macOS ############################
+#---------------------------------------------------------------
+#                       MacOS
+#---------------------------------------------------------------
 
 # General
 .DS_Store
@@ -21,7 +22,6 @@ Icon
 .VolumeIcon.icns
 .com.apple.timemachine.donotpresent
 
-### macOS Patch ###
 # iCloud generated files
 *.icloud
 
@@ -29,8 +29,9 @@ Icon
 ~*
 $*
 
-###################################################
-############### Jupyter and python ###############
+#---------------------------------------------------------------
+#                       Python and Jupyter
+#---------------------------------------------------------------
 
 # jupyter temp files
 .ipynb_checkpoints
@@ -69,8 +70,6 @@ share/python-wheels/
 MANIFEST
 
 # PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
 
@@ -169,8 +168,9 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-################################################################
-############### Ignore data files and directories ##############
+#---------------------------------------------------------------
+#                       Raw Data and results
+#---------------------------------------------------------------
 
 *.dat
 *.efx
@@ -187,17 +187,15 @@ cython_debug/
 
 # ignore data, but keep directories as placeholders
 input_data/**
-!input_data/**/
-!input_data/**/.gitkeep
 output/**
-!output/**/
-!output/**/.gitkeep
+!input_data/.gitkeep
+!output/.gitkeep
 
 *.nextflow*
 
-
-################################################################
-############### R and R-studio #################################
+#---------------------------------------------------------------
+#                       R and R-studio
+#---------------------------------------------------------------
 
 # History files
 .Rhistory
