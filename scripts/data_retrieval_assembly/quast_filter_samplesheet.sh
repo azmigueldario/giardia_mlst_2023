@@ -1,87 +1,100 @@
 #!/bin/bash
-#SBATCH --mem-per-cpu=32G
-#SBATCH --time=08:00:00
+#SBATCH --account=def-whsiao-ab
+#SBATCH --mem-per-cpu=2G
+#SBATCH --time=00:20:00
 #SBATCH --cpus-per-task=8
 #SBATCH --job-name="quast_filter_2025"
 #SBATCH --chdir=/scratch/mdprieto/
-#SBATCH --output=jobs_output/%j_%x.out
+#SBATCH --output=logs_jobs/%j_%x.out
 
 #########################################################################################################
 #                                           Dependencies
 #########################################################################################################
 
-# load modules
-module load StdEnv/2023 gcc/14.3.0 quast/5.2.0 csvtk/0.23.0 apptainer/1.4.5
+# Load modules
+module load StdEnv/2023 apptainer/1.4.5
 
-# define environment variables for HPC
-project_repo="/project/60006/mdprieto/giardia_mlst_2023"
-bactopia_results="/scratch/mdprieto/results/giardia_project/bactopia_giardia_feb2025/"
-paths="${project_repo}/output/assembly_list.txt"
-outdir_quast="${project_repo}/output/quast_output"
+# Determine script directory (SLURM or local) and source config with paths
+set -euo pipefail
 
-# define path to singularity image for quast
-quast_container="/scratch/group_share/singularity_imgs/quay.io-quast-5.2.0--py39pl5321h2add14b_1.img"
+if [[ -n "${SLURM_SUBMIT_DIR:-}" ]]; then
+    script_dir="${SLURM_SUBMIT_DIR}"
+else
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+fi
+
+source "${script_dir}/../../config_paths.sh"
+
 
 #########################################################################################################
 #                                           Command(s)
 #########################################################################################################
 
-# --------------------------------------------- QUAST -------------------------------------------
+#--------------------------------------------------------------------------------------------------------
+# Assembly QC with quast
+#--------------------------------------------------------------------------------------------------------
 
-# Collect all fasta files into a list
-ls "${bactopia_results}"/*/main/assembler/*.fna.gz > "$paths"
+# Collect all fasta files and create outdir
+mkdir -p "${project_outdir}/quast_assembly"
 
-# create directory
-mkdir -p ${outdir}
-
-# to save log in place
-cd "$outdir_quast"
-
-# quast for all assemblies
-apptainer exec "$quast_container" \
-    quast.py $(cat $paths) \
-        --output-dir "$outdir_quast" \
+# Appraise quality of all assemblies
+apptainer exec "${quast_container}" \
+    quast.py \
+        --output-dir "${project_outdir}/quast_assembly" \
         --threads 8 \
-        --gene-finding \
         --eukaryote \
-        --no-html
+        --fast \
+        "${bactopia_results}"/*/main/assembler/*.fna.gz
 
-# -------------------------------------- Filter Quast output ---------------------------------------
+#--------------------------------------------------------------------------------------------------------
+# Filter Quast output
+#--------------------------------------------------------------------------------------------------------
 
-# define output path
-filtered_assemblies="${project_repo}/processed_data/accessions/quast_filtered_assemblies.txt"
+# Filter definition (csvtk): 
+    # N50 [col18] must be at least 30,000 [Illumina short reads mostly]
+    # n_contigs [col14] less than 1,300 
+    # total length [col16] of assembly between 9M and 15M bp [Similar to the refernce genome size of 12M]
+cat "${project_outdir}/quast_assembly/transposed_report.tsv" |
+    csvtk rename2 --tabs --fuzzy-fields --fields "*" --pattern " " --replacement "_" |
+    csvtk rename2 --tabs --fuzzy-fields --fields "*" --pattern "#" --replacement "n" |
+    csvtk filter --tabs --filter "N50>30000" | 
+    csvtk filter --tabs --filter 'n_contigs<1500' |
+    csvtk filter2 --tabs --filter '$Total_length > 9000000 && $Total_length < 15000000' | 
+    csvtk cut --tabs --fields Assembly |
+    csvtk del-header |
+    uniq > "${accessions_dir}/quast_filtered_assemblies.txt"
+    
 
+#--------------------------------------------------------------------------------------------------------
+# Create samplesheet(s) for nf_chewbbaca
+#--------------------------------------------------------------------------------------------------------
 
-# csvtk filter definition, columns: N50 is col18, n_contigs is col14, length is col16
-csvtk filter2 --tabs \
-    --filter '$18 > 50000 && $14 < 1300 && $16 > 9000000 && $16 < 15000000' \
-    "${outdir}/transposed_report.tsv" | \
-csvtk cut --tabs \
-    --fields Assembly > \
-    ${filtered_assemblies}
+# Samplesheet with all assemblies -----------------------------------------------------------------------
 
+# Add header
+    # Append all fasta files except failed assemblies
+echo "sample,contig" > "${processed_data}/nf_chewbbaca_samplesheets/all_samplesheet_2025.csv"
+ls "${bactopia_results}"/*/main/assembler/*.fna.gz |
+    grep --invert-match "error.fna.gz$" \
+    >> "${processed_data}/nf_chewbbaca_samplesheets/all_samplesheet_2025.csv"
 
-# ------------------------------ Create samplesheet for nf_chewbbaca --------------------------------
+# Samplesheet with HQ assemblies by Quast ---------------------------------------------------------------
 
-# add header to output samplesheet
-outfile_samplesheet=""${project_repo}/processed_data/nf_chewbbaca_samplesheets/hq_samplesheet_2025.csv""
-echo "sample,contig" > "${outfile_samplesheet}"
+# Add header
+echo "sample,contig" > "${processed_data}/nf_chewbbaca_samplesheets/hq_samplesheet_2025.csv"
 
-# loop through each name in the FOFN
+# Search each accession in the assembly directory against all assembly paths
 while IFS= read -r sample_id; do
-    # Skip empty lines
-    [[ -z "$sample_id" ]] && continue
+    [[ -z "${sample_id}" ]] && continue 
     
-    # match sample_id after path '/' and must be flanked by delimiter ',' or '_'
-    match=$(grep --max-count=1 "/${sample_id}[._]" "$paths")
+    # Match: sample_id after path '/' and flanked by delimiter '.' or '_'
+    match=$(grep --max-count=1 "/${sample_id}[._]" "${processed_data}/nf_chewbbaca_samplesheets/all_samplesheet_2025.csv")
     
+    # Append sampleid and path if found, or provide error about missing file
     if [[ -n "$match" ]]; then
-        echo "${sample_id},${match}" >> "$outfile_samplesheet"
+        echo "${sample_id},${match}" >> "${processed_data}/nf_chewbbaca_samplesheets/hq_samplesheet_2025.csv"
     else
         echo "WARNING: No path found for ${sample_id}" >&2
     fi
 
-done < "$filtered_assemblies"
-
-# remove file with paths
-rm $paths
+done < "${accessions_dir}/quast_filtered_assemblies.txt"
