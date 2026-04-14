@@ -1,10 +1,13 @@
 #!/bin/bash                                 
 #SBATCH --mem-per-cpu=6G                    
-#SBATCH --time=20:30:00                     
+#SBATCH --time=1-20:30:00
+#SBATCH --account=def-whsiao-ab                 
 #SBATCH --cpus-per-task=8
 #SBATCH --job-name="sra_download_giardia"           
 #SBATCH --chdir=/scratch/mdprieto/          
-#SBATCH --output=jobs_output/giardia_assembly/%x_%j.out 
+#SBATCH --output=logs_jobs/giardia_assembly/%x_%j.out
+#SBATCH --mail-user=mprietog@sfu.ca
+#SBATCH --mail-type=ALL
 
 #========================================================================================================
 #
@@ -17,7 +20,7 @@
 #--------------------------------------------------------------------------------------------------------
 
 # Load modules
-module load StdEnv/2023 nextflow/25.04.6 apptainer/1.4.5
+module load StdEnv/2023 apptainer/1.4.5
 
 # Determine script directory (SLURM or local)
 set -euo pipefail
@@ -40,7 +43,7 @@ cat "${accessions_dir}/BCCDC_accessions.txt" "${accessions_dir}/SRR_accessions_2
 # Make directories if necessary
 mkdir -p "${raw_reads_dir}" 
 mkdir -p "${reference_genome}"
-mkdir -p "${scratch_tmp_folder}/sra_tmp"
+mkdir -p "${scratch_tmp_folder}/sratools_cache"
 
 # Download fastq data and compress it
 while read -r SRR; do
@@ -51,21 +54,34 @@ while read -r SRR; do
         continue
     fi
     
-    echo "Downloading ${SRR}..."
+    # Prefetch first
+    echo "Prefetch of ${SRR}..."
+    apptainer exec "${sra_tools_container}" \
+        prefetch "${SRR}" \
+        --location aws \
+        --max-size 100G \
+        --output-directory "${scratch_tmp_folder}/sratools_cache" || { 
+            echo "ERROR: Failed to prefetch ${SRR}. Skipping..."
+            continue 
+        }
+
+    # Fasterq-dump
+    echo "Fasterq-dump of ${SRR}"
     apptainer exec "${sra_tools_container}" \
         fasterq-dump \
         --split-files \
         --outdir "${raw_reads_dir}" \
         --threads 7 \
-        --temp "${scratch_tmp_folder}/sra_tmp" \
-        --mem 4GB \
+        --mem 32GB \
+        --temp "${scratch_tmp_folder}/sratools_cache" \
         --force \
-        "${SRR}" < /dev/null || { 
+        "${scratch_tmp_folder}/sratools_cache/${SRR}/${SRR}.sra"  < /dev/null || { 
             echo "ERROR: Failed to download ${SRR}. Skipping to next..."
             continue 
         }
 
-    echo "Compressing ${SRR}..."
+    echo "Cleaning intermediate file and compressing ${SRR}..."
+    rm -rf "${scratch_tmp_folder}/sratools_cache/${SRR}"
     pigz \
         --force \
         --processes 8 \
@@ -84,4 +100,4 @@ curl \
     --location \
     --fail \
     https://ftp.ncbi.nlm.nih.gov/genomes/refseq/protozoa/Giardia_duodenalis/latest_assembly_versions/GCF_000002435.2_UU_WB_2.1/GCF_000002435.2_UU_WB_2.1_genomic.fna.gz \
-    > "${reference_genome}/GCF_000002435.2_UU_WB_2.1_genomic.fna.gz"
+    > "${reference_genome}/GCF_000002435.2_WB_genomic.fna.gz"

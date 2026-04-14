@@ -1,10 +1,11 @@
 #!/bin/bash
+#SBATCH --account=def-whsiao-ab
 #SBATCH --mem-per-cpu=3G
 #SBATCH --time=5-12:00:00
 #SBATCH --cpus-per-task=6
 #SBATCH --job-name="bactopia_giardia_2025"
 #SBATCH --chdir=/scratch/mdprieto/
-#SBATCH --output=jobs_output/giardia_assembly/%j_%x.out
+#SBATCH --output=logs_jobs/giardia_assembly/%j_%x.out
 
 #========================================================================================================
 #
@@ -33,9 +34,9 @@ source "${script_dir}/../../config_paths.sh"
 #--------------------------------------------------------------------------------------------------------
 
     # if eagle has low space available in scratch, save temp files in another workdir
-nextflow run bactopia/bactopia -r v3.0.0 \
-    -profile singularity,slurm \
-    --nfconfig "${script_dir}/eagle_bactopia.config" \
+nextflow run bactopia/bactopia -r v3.2.0 \
+    -profile apptainer,slurm_fir \
+    --nfconfig "${script_dir}/bactopia.config" \
     --samples "${processed_data}/bactopia_samplesheets/bactopia_samplesheet_2025.csv" \
     --outdir "${project_outdir}/bactopia_giardia_2025" \
     --shovill_assembler spades \

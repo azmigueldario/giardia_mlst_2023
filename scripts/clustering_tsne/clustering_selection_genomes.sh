@@ -1,52 +1,63 @@
 #!/usr/bin/env bash
 
 
-##################################################################################################
-#             Dependencies
-##################################################################################################
+#########################################################################################################
+#                                           Dependencies
+#########################################################################################################
 
+# Load modules
+module load StdEnv/2023 apptainer/1.4.5 python/3.12
 
-# load Apptainer software for containers (or have it installed locally)
-module load StdEnv/2023 apptainer/1.4.5
+# Determine script directory (SLURM or local) and source config with paths
+set -euo pipefail
+if [[ -n "${SLURM_SUBMIT_DIR:-}" ]]; then
+    script_dir="${SLURM_SUBMIT_DIR}"
+else
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+fi
 
-# modify project root path as necessary - pointing towards the project repository
-project_repo="/project/60006/mdprieto/giardia_mlst_2023"
-
-# manual INPUTs - apptainer image(s) 
-sourmash_img="/mnt/cidgoh-object-storage/images/sourmash-4.8.9-hdfd78af_0.img"
-
-# relative paths (taken from previous steps)
-repo_bactopia_fastas="${project_repo}/input_data/bactopia_fasta"
-quast_filtered_genomes="${project_repo}/processed_data/accessions/quast_filtered_assemblies.txt"
-repo_output="${project_repo}/output"
-
+source "${script_dir}/../../config_paths.sh"  
 
 ##################################################################################################
 #             Sourmash commands
 ##################################################################################################
 
+# Create output directory 
+mkdir -p "${project_outdir}/sourmash/signatures"
 
-mkdir -p ${repo_output}/sourmash/signatures
+# Make temporary file for input paths
+temp_list="$(mktemp)"
 
-# 1/1000 scaled dna sketch with a specific seed for reproducibility
-apptainer exec ${sourmash_img} \
+# Parse path column (2) and remove header from list of HQ assemblies
+cut \
+    --fields=2 \
+    --delimiter=, \
+     "${processed_data}/nf_chewbbaca_samplesheets/hq_samplesheet_2025.csv" |
+grep "fna.gz$" \
+    > "${temp_list}"
+
+
+# Sourmash dna sketch scaled 1/1000; specific seed for reproducibility
+apptainer exec "${sourmash_container}" \
     sourmash \
         sketch dna \
-            $(ls "${repo_bactopia_fastas}"/*.fna.gz | grep -Ef ${quast_filtered_genomes}) \
+            --from-file "${temp_list}" \
             --param-string k=51,scaled=1000,seed=1113 \
-            --output-dir ${repo_output}/sourmash/signatures
+            --output-dir "${project_outdir}/sourmash/signatures"
 
-# obtain all vs all distance matrix .csv
-apptainer exec ${sourmash_img} \
-    sourmash compare \
-        --ani \
-        --processes 6 \
-        --distance-matrix \
-        --ksize 51 \
-        --dna \
-        --csv ${repo_output}/sourmash/sourmash_dist_quast_filtered.csv \
-        ${repo_output}/sourmash/signatures/*.fna.gz.sig
+# Produce (all vs all) distance matrix csv file
+apptainer exec "${sourmash_container}" \
+    sourmash \
+        compare \
+            --ani \
+            --processes 6 \
+            --distance-matrix \
+            --ksize 51 \
+            --dna \
+            --csv "${project_outdir}/sourmash/sourmash_dist_quast_filtered.csv" \
+            "${project_outdir}/sourmash/signatures/"*.fna.gz.sig
     
+rm -f "${temp_list}"
 
 ##################################################################################################
 #             t-SNE and HDBSCAN commands
@@ -56,9 +67,9 @@ apptainer exec ${sourmash_img} \
 # provided in the repository subfolder ./scripts/clustering_tsne_hdbscan. 
 # Here we run t-SNE and HDBSCAN clustering with the selected parameters.
 
-python ${project_root}/scripts/clustering_tsne/bin/tsne_hdbscan_automated.py \
-    --outfile "${project_root}/processed_data/clustered_subsample_list.txt" \
-    --random_seed 112233 \
+python ${script_dir}/bin/tsne_hdbscan_automated.py \
+    --outfile "${processed_data}/clustered_subsample_list.txt" \
+    --random_seed 1113 \
     --min_cluster_size 15 \
     --min_samples 15 \
-    ${repo_output}/sourmash/sourmash_HQ_dist.csv
+    ${project_outdir}/sourmash/sourmash_HQ_dist.csv
