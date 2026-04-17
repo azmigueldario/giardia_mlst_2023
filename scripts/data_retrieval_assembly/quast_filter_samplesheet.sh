@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --account=def-whsiao-ab
-#SBATCH --mem-per-cpu=2G
-#SBATCH --time=00:20:00
+#SBATCH --mem-per-cpu=4G
+#SBATCH --time=01:00:00
 #SBATCH --cpus-per-task=8
-#SBATCH --job-name="quast_filter_2025"
+#SBATCH --job-name="filtering_clustering_samplesheet"
 #SBATCH --chdir=/scratch/mdprieto/
 #SBATCH --output=logs_jobs/%j_%x.out
 
@@ -27,7 +27,7 @@ source "${script_dir}/../../config_paths.sh"
 
 
 #########################################################################################################
-#                                           Command(s)
+#                                          QUAST command(s)
 #########################################################################################################
 
 #--------------------------------------------------------------------------------------------------------
@@ -66,10 +66,8 @@ cat "${project_outdir}/quast_assembly/transposed_report.tsv" |
     
 
 #--------------------------------------------------------------------------------------------------------
-# Create samplesheet(s) for nf_chewbbaca
+# Create samplesheet(s) for nf_chewbbaca with all assemblies
 #--------------------------------------------------------------------------------------------------------
-
-# Samplesheet with all assemblies -----------------------------------------------------------------------
 
 # Add header
     # Append all fasta files except failed assemblies
@@ -78,7 +76,9 @@ ls "${bactopia_results}"/*/main/assembler/*.fna.gz |
     grep --invert-match "error.fna.gz$" \
     >> "${processed_data}/nf_chewbbaca_samplesheets/all_samplesheet_2025.csv"
 
-# Samplesheet with HQ assemblies by Quast ---------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------------
+# Create samplesheet(s) for nf_chewbbaca with assemblies passing QC filters
+#--------------------------------------------------------------------------------------------------------
 
 # Add header
 echo "sample,contig" > "${processed_data}/nf_chewbbaca_samplesheets/hq_samplesheet_2025.csv"
@@ -98,3 +98,73 @@ while IFS= read -r sample_id; do
     fi
 
 done < "${accessions_dir}/quast_filtered_assemblies.txt"
+
+
+##################################################################################################
+#                                   Sourmash commands
+##################################################################################################
+
+# Create output directory 
+mkdir -p "${project_outdir}/sourmash/signatures"
+mkdir -p "${project_outdir}/sourmash/signatures_clean"
+
+# Make temporary file for input paths
+temp_list="$(mktemp)"
+
+# Parse path column (2) and remove header from list of HQ assemblies
+cut \
+    --fields=2 \
+    --delimiter=, \
+     "${processed_data}/nf_chewbbaca_samplesheets/hq_samplesheet_2025.csv" |
+grep "fna.gz$" \
+    > "${temp_list}"
+
+
+# Sourmash dna sketch scaled 1/1000; specific seed for reproducibility
+apptainer exec "${sourmash_container}" \
+    sourmash \
+        sketch dna \
+            --from-file "${temp_list}" \
+            --param-string k=51,scaled=1000,seed=1113 \
+            --output-dir "${project_outdir}/sourmash/signatures"
+
+# Rename signature identifiers
+for signature_file in "${project_outdir}/sourmash/signatures/"*.fna.gz.sig
+do
+    new_id=$(basename --suffix=".fna.gz.sig" "${signature_file}")
+    apptainer exec "${sourmash_container}" \
+        sourmash signature rename \
+            "${signature_file}" \
+            "${new_id}" \
+            -o "${project_outdir}/sourmash/signatures_clean/${new_id}.fna.gz.sig"
+done
+
+# Produce (all vs all) distance matrix csv file
+apptainer exec "${sourmash_container}" \
+    sourmash \
+        compare \
+            --ani \
+            --processes 6 \
+            --distance-matrix \
+            --ksize 51 \
+            --dna \
+            --csv "${project_outdir}/sourmash/sourmash_distances_hq_genomes.csv" \
+            --labels-to "${project_outdir}/sourmash/sourmash_labels.csv" \
+            "${project_outdir}/sourmash/signatures_clean/"*.sig
+    
+rm "${temp_list}" "${project_outdir}/sourmash/signatures"
+
+##################################################################################################
+#                               t-SNE and HDBSCAN commands
+##################################################################################################
+
+# The hyperparameters for t-SNE and HDBSCAN have been previously optimized using the jupyter notebook 
+# provided in the repository subfolder ./scripts/clustering_tsne_hdbscan. 
+# Here we run t-SNE and HDBSCAN clustering with the selected parameters.
+
+python ${project_root}/scripts/clustering_tsne/bin/tsne_hdbscan_automated.py \
+    --outfile "${project_root}/processed_data/clustered_subsample_list.txt" \
+    --random_seed 112233 \
+    --min_cluster_size 15 \
+    --min_samples 15 \
+    ${project_outdir}/sourmash/sourmash_HQ_dist.csv

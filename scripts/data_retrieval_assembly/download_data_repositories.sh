@@ -100,4 +100,4 @@ curl \
     --location \
     --fail \
     https://ftp.ncbi.nlm.nih.gov/genomes/refseq/protozoa/Giardia_duodenalis/latest_assembly_versions/GCF_000002435.2_UU_WB_2.1/GCF_000002435.2_UU_WB_2.1_genomic.fna.gz \
-    > "${reference_genome}/GCF_000002435.2_UU_WB_2.1_genomic.fna.gz"
+    > "${reference_genome}/GCF_000002435.2_WB_genomic.fna.gz"

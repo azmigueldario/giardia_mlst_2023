@@ -35,6 +35,7 @@ elif [[ "$drac_cluster" == "fir" || "$current_host" == *"fir"* || "$current_host
     # MANUAL: container path(s)
     sra_tools_container="/project/6007413/cidgoh_share/singularity_imgs/sra-tools-3.2.1--h4304569_1.img"
     quast_container="/project/6007413/cidgoh_share/singularity_imgs/quast-5.0.2--py37pl526hb5aa323_2.img"
+    sourmash_container="/project/6007413/cidgoh_share/singularity_imgs/sourmash-4.8.9--hdfd78af_0.img"
 
 # FALLBACK/UNKNOWN
 else
@@ -51,6 +52,7 @@ export project_root
 export scratch_tmp_folder
 export sra_tools_container
 export quast_container
+export sourmash_container
 
 # AUTOMATED: relative input and output path(s)
 export project_scripts_dir="${project_root}/scripts"
