@@ -37,6 +37,9 @@ elif [[ "$drac_cluster" == "fir" || "$current_host" == *"fir"* || "$current_host
     quast_container="/project/6007413/cidgoh_share/singularity_imgs/quast-5.0.2--py37pl526hb5aa323_2.img"
     sourmash_container="/project/6007413/cidgoh_share/singularity_imgs/sourmash-4.8.9--hdfd78af_0.img"
 
+    # MANUAL: python environment for clustering
+    clustering_env="/home/mdprieto/virtual_envs/tsne_env2/"
+
 # FALLBACK/UNKNOWN
 else
     echo "ERROR: Unknown computing environment. Host: ${current_host}, CC_CLUSTER: ${drac_cluster}"
@@ -53,12 +56,16 @@ export scratch_tmp_folder
 export sra_tools_container
 export quast_container
 export sourmash_container
+export clustering_env
 
-# AUTOMATED: relative input and output path(s)
+# AUTOMATED: relative input to primary subfolders
 export project_scripts_dir="${project_root}/scripts"
+export input_dir="${project_root}/input_data"
 export processed_data="${project_root}/processed_data"
 export project_outdir="${project_root}/output"
-export bactopia_results="${project_outdir}/bactopia_giardia_2025"
-export raw_reads_dir="${project_root}/input_data/raw_fastq"
-export reference_genome="${project_root}/input_data/reference_assemblage_A"
+
+# AUTOMATED: relative path to other subfolders
+export raw_reads_dir="${input_dir}/raw_fastq"
+export reference_genome="${input_dir}/reference_assemblage_A"
 export accessions_dir="${processed_data}/accessions"
+export bactopia_results="${project_outdir}/bactopia_giardia_2025"

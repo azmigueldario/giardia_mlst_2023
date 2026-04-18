@@ -101,3 +101,13 @@ curl \
     --fail \
     https://ftp.ncbi.nlm.nih.gov/genomes/refseq/protozoa/Giardia_duodenalis/latest_assembly_versions/GCF_000002435.2_UU_WB_2.1/GCF_000002435.2_UU_WB_2.1_genomic.fna.gz \
     > "${reference_genome}/GCF_000002435.2_WB_genomic.fna.gz"
+
+mkdir -p "${reference_genome}/assemblage_B"
+curl \
+    --silent \
+    --show-error \
+    --location \
+    --fail \
+    "https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/498/735/GCA_000498735.1_ASM49873v1/GCA_000498735.1_ASM49873v1_genomic.fna.gz" \
+    > "${reference_genome}/assemblage_B/GCA_000498735.1_genomic.fna.gz"
+
