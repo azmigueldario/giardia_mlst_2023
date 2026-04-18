@@ -60,14 +60,31 @@ apptainer exec "${sourmash_container}" \
 rm -f "${temp_list}"
 
 ##################################################################################################
-#             t-SNE and HDBSCAN commands
+#             Clustering and subsampling of BC diversity
 ##################################################################################################
 
-# The hyperparameters for t-SNE and HDBSCAN have been previously optimized using the jupyter notebook 
-# provided in the repository subfolder ./scripts/clustering_tsne_hdbscan. 
-# Here we run t-SNE and HDBSCAN clustering with the selected parameters.
+# With the interactive jupyter notebook, we found a subcluster of BC samples that have 
+# more than 97% similarity in the sketchs and that form a distinct subcluster in UMAP.
 
-python ${script_dir}/bin/tsne_hdbscan_automated.py \
+
+# As sensitivity analysis, we are producing two samplesheets subsampling (at random and min-max) the 
+# diversity in the subcluster
+
+python ${script_dir}/bin/bc_diversity_impact.py \
+    --distance_matrix "$DIST_MAT" \
+    --metadata "$METADATA" \
+    --fasta_dir "$FASTA_DIR" \
+    --output_prefix "$OUTPUT_PRE" \
+    --fasta_extension .fasta .fa .fna .fasta.gz \
+    --agglo_cluster_value 2 \
+    --keep 20 \
+    --threshold_agglomerative 0.05 \
+    --threshold_umap 2.5 \
+    --neighbors_umap 15 \
+    --seed 1113
+
+
+
     --outfile "${processed_data}/clustered_subsample_list.txt" \
     --random_seed 1113 \
     --min_cluster_size 15 \
