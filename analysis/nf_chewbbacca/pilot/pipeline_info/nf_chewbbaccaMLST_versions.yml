@@ -1,0 +1,5 @@
+PRODIGAL_TRAINING:
+  prodigal: 2.6.3
+Workflow:
+    nf_chewbbaca_mlst: v0.1
+    Nextflow: 25.10.2
