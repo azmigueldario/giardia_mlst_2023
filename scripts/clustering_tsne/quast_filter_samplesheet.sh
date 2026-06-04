@@ -7,12 +7,12 @@
 #SBATCH --chdir=/scratch/mdprieto/
 #SBATCH --output=logs_jobs/%j_%x.out
 
-#########################################################################################################
+#--------------------------------------------------------------------------------------------------------
 #                                           Dependencies
-#########################################################################################################
+#--------------------------------------------------------------------------------------------------------
 
 # Load modules
-module load StdEnv/2023 apptainer/1.4.5 python/3.12
+module load StdEnv/2020 csvtk/0.23.0 apptainer/1.2.4
 
 # Determine script directory (SLURM or local) and source config with paths
 set -euo pipefail
@@ -25,13 +25,8 @@ fi
 
 source "${script_dir}/../../config_paths.sh"
 
-
-#########################################################################################################
-#                                          QUAST command(s)
-#########################################################################################################
-
 #--------------------------------------------------------------------------------------------------------
-# Assembly QC with quast
+#                   Assembly QC with quast
 #--------------------------------------------------------------------------------------------------------
 
 # Collect all fasta files and create outdir
@@ -47,52 +42,51 @@ apptainer exec "${quast_container}" \
         "${bactopia_results}"/*/main/assembler/*.fna.gz
 
 #--------------------------------------------------------------------------------------------------------
-# Filter Quast output
+#                   Filter Quast output
 #--------------------------------------------------------------------------------------------------------
 
-# Filter definition (csvtk): 
+# Filter definition (csvtk):
     # N50 [col18] must be at least 30,000 [Illumina short reads mostly]
-    # n_contigs [col14] less than 1,300 
+    # n_contigs [col14] less than 1,300
     # total length [col16] of assembly between 9M and 15M bp [Similar to the refernce genome size of 12M]
 cat "${project_outdir}/quast_assembly/transposed_report.tsv" |
     csvtk rename2 --tabs --fuzzy-fields --fields "*" --pattern " " --replacement "_" |
     csvtk rename2 --tabs --fuzzy-fields --fields "*" --pattern "#" --replacement "n" |
-    csvtk filter --tabs --filter "N50>30000" | 
+    csvtk filter --tabs --filter "N50>30000" |
     csvtk filter --tabs --filter 'n_contigs<1500' |
-    csvtk filter2 --tabs --filter '$Total_length > 9000000 && $Total_length < 15000000' | 
+    csvtk filter2 --tabs --filter '$Total_length > 9000000 && $Total_length < 15000000' |
     csvtk cut --tabs --fields Assembly |
     csvtk del-header |
     uniq > "${accessions_dir}/quast_filtered_assemblies.txt"
-    
 
 #--------------------------------------------------------------------------------------------------------
-# Create samplesheet(s) for nf_chewbbaca with all assemblies
+#                   Create samplesheet(s) for nf_chewbbaca with all assemblies
 #--------------------------------------------------------------------------------------------------------
 
 # Add header
     # Append all fasta files except failed assemblies
-echo "sample,contig" > "${processed_data}/nf_chewbbaca_samplesheets/all_samplesheet_2025.csv"
+echo "sample,contig" > "${processed_data}/nf_chewbbacca_samplesheets/all_samplesheet_2025.csv"
 ls "${bactopia_results}"/*/main/assembler/*.fna.gz |
     grep --invert-match "error.fna.gz$" \
-    >> "${processed_data}/nf_chewbbaca_samplesheets/all_samplesheet_2025.csv"
+    >> "${processed_data}/nf_chewbbacca_samplesheets/all_samplesheet_2025.csv"
 
 #--------------------------------------------------------------------------------------------------------
-# Create samplesheet(s) for nf_chewbbaca with assemblies passing QC filters
+#                   Create samplesheet(s) for nf_chewbbaca with assemblies passing QC filters
 #--------------------------------------------------------------------------------------------------------
 
 # Add header
-echo "sample,contig" > "${processed_data}/nf_chewbbaca_samplesheets/hq_samplesheet_2025.csv"
+echo "sample,contig" > "${processed_data}/nf_chewbbacca_samplesheets/hq_samplesheet_2025.csv"
 
 # Search each accession in the assembly directory against all assembly paths
 while IFS= read -r sample_id; do
-    [[ -z "${sample_id}" ]] && continue 
-    
+    [[ -z "${sample_id}" ]] && continue
+
     # Match: sample_id after path '/' and flanked by delimiter '.' or '_'
-    match=$(grep --max-count=1 "/${sample_id}[._]" "${processed_data}/nf_chewbbaca_samplesheets/all_samplesheet_2025.csv")
-    
+    match=$(grep --max-count=1 "/${sample_id}[._]" "${processed_data}/nf_chewbbacca_samplesheets/all_samplesheet_2025.csv")
+
     # Append sampleid and path if found, or provide error about missing file
     if [[ -n "$match" ]]; then
-        echo "${sample_id},${match}" >> "${processed_data}/nf_chewbbaca_samplesheets/hq_samplesheet_2025.csv"
+        echo "${sample_id},${match}" >> "${processed_data}/nf_chewbbacca_samplesheets/hq_samplesheet_2025.csv"
     else
         echo "WARNING: No path found for ${sample_id}" >&2
     fi
@@ -100,11 +94,11 @@ while IFS= read -r sample_id; do
 done < "${accessions_dir}/quast_filtered_assemblies.txt"
 
 
-##################################################################################################
-#                                   Sourmash commands
-##################################################################################################
+#--------------------------------------------------------------------------------------------------------
+#                   Sourmash commands
+#--------------------------------------------------------------------------------------------------------
 
-# Create output directory 
+# Create output directory
 mkdir -p "${project_outdir}/sourmash/signatures"
 mkdir -p "${project_outdir}/sourmash/signatures_clean"
 
@@ -115,7 +109,7 @@ temp_list="$(mktemp)"
 cut \
     --fields=2 \
     --delimiter=, \
-     "${processed_data}/nf_chewbbaca_samplesheets/hq_samplesheet_2025.csv" |
+     "${processed_data}/nf_chewbbacca_samplesheets/hq_samplesheet_2025.csv" |
 grep "fna.gz$" \
     > "${temp_list}"
 
@@ -151,18 +145,21 @@ apptainer exec "${sourmash_container}" \
             --csv "${project_outdir}/sourmash/sourmash_distances_hq_genomes.csv" \
             --labels-to "${project_outdir}/sourmash/sourmash_labels.csv" \
             "${project_outdir}/sourmash/signatures_clean/"*.sig
-    
-rm "${temp_list}" "${project_outdir}/sourmash/signatures"
 
-##################################################################################################
-#             Clustering and subsampling of BC diversity
-##################################################################################################
+rm -r "${temp_list}" "${project_outdir}/sourmash/signatures"
 
-# With the interactive jupyter notebook, we found a subcluster of BC samples that have 
+#--------------------------------------------------------------------------------------------------------
+#           Clustering and subsampling of BC diversity
+#--------------------------------------------------------------------------------------------------------
+
+# Update dependencies
+module load StdEnv/2023 python/3.11
+
+# With the interactive jupyter notebook, we found a subcluster of BC samples that have
 # more than 97% similarity in the sketchs and that form a distinct subcluster in UMAP.
-
-# As sensitivity analysis, we are producing two samplesheets subsampling (at random and min-max) the 
-# diversity in the subcluster
+#
+#       As sensitivity analysis, we are producing two samplesheets subsampling (at random and min-max) the
+#       diversity in the subcluster
 
 source "${clustering_env}/bin/activate"
 
@@ -170,7 +167,7 @@ python ${script_dir}/bin/bc_diversity_impact.py \
     --distance_matrix "${project_outdir}/sourmash/sourmash_distances_hq_genomes.csv" \
     --metadata "${input_dir}/metadata/merged_SraPrystajecky.csv" \
     --fasta_dir "${bactopia_results}" \
-    --output_prefix "${processed_data}/nf_chewbbaca_samplesheets/giardia_subsample" \
+    --output_prefix "${processed_data}/nf_chewbbacca_samplesheets/giardia_subsample" \
     --agglo_cluster_value 2 \
     --keep 16 \
     --umap_mode 'below' \
