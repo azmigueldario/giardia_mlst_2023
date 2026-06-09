@@ -16,7 +16,11 @@ import pandas as pd
 from pathlib import Path
 from sklearn.cluster import AgglomerativeClustering
 
+<<<<<<< HEAD
 #  SILENCE WARNINGS
+=======
+#  SILENCE WARNINGS 
+>>>>>>> final_improvements
 warnings.filterwarnings("ignore", message="using precomputed metric")
 warnings.filterwarnings("ignore", message="n_jobs value 1 overridden")
 warnings.filterwarnings("ignore", message="The figure layout has changed to tight")
@@ -34,6 +38,7 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description="Downsample genomic subclusters using Min-Max diversity sampling and random sampling."
     )
+<<<<<<< HEAD
 
     # Input/Output
     parser.add_argument("-d", "--distance_matrix",
@@ -49,10 +54,28 @@ def parse_args():
                         required=True,
                         help="Base directory where FASTA files are stored")
     parser.add_argument("--fasta_extension",
+=======
+    
+    # Input/Output
+    parser.add_argument("-d", "--distance_matrix", 
+                        required=True, 
+                        help="Path to Sourmash/Jaccard distance matrix (CSV)")
+    parser.add_argument("-m", "--metadata", 
+                        required=True, help="Path to metadata/vector_mat (CSV)")
+    parser.add_argument("-o", "--output_prefix", 
+                        default="giardia_subset", help="Output filename prefix (default: giardia_subset)")
+
+    # Fasta Path Logic
+    parser.add_argument("--fasta_dir", 
+                        required=True, 
+                        help="Base directory where FASTA files are stored")
+    parser.add_argument("--fasta_extension", 
+>>>>>>> final_improvements
                         nargs='+', default=['.fasta', '.fa', '.fna', '.fasta.gz', '.fa.gz', '.fna.gz'],
                         help="Extension of fasta files (default: .fasta)")
 
     # Parameters
+<<<<<<< HEAD
     parser.add_argument("--agglo_cluster_value",
                         type=int, default=2,
                         help="Chosen cluster value to subsample")
@@ -76,6 +99,31 @@ def parse_args():
     parser.add_argument("--seed", type=int,
                         default=1113, help="Random seed for reproducibility (default: 1113)")
 
+=======
+    parser.add_argument("--agglo_cluster_value", 
+                        type=int, default=2, 
+                        help="Chosen cluster value to subsample")
+    parser.add_argument("--keep", 
+                        type=int, default=20, 
+                        help="Number of samples to keep from the target subcluster (default: 20)")
+    parser.add_argument("--threshold_agglomerative",
+                        default=0.05,
+                        type=float, 
+                        help="Distance. threshold for agglomerative clustering (Default: 0.05)")
+    parser.add_argument("--threshold_umap",
+                        required=True, 
+                        type=float, 
+                        help="UMAP-2 threshold for identifying the endemic lineage (defined interactively)")
+    parser.add_argument("--umap_mode", choices=['above', 'below'], default='above', 
+                        help="Filter samples 'above' or 'below' the UMAP-2 threshold")
+    parser.add_argument("--neighbors_umap",
+                        required=True, 
+                        type=int, 
+                        help="UMAP-2 influential neighbors (defined interactively)")
+    parser.add_argument("--seed", type=int, 
+                        default=1113, help="Random seed for reproducibility (default: 1113)")
+    
+>>>>>>> final_improvements
     return parser.parse_args()
 
 # ---------------------------------------------------------------------------------------------------
@@ -84,8 +132,12 @@ def parse_args():
 
 def clean_id(name):
     """Helper to strip paths and all genomic extensions including .gz"""
+<<<<<<< HEAD
     if not isinstance(name, str):
         return str(name)
+=======
+    if not isinstance(name, str): return str(name)
+>>>>>>> final_improvements
     # Remove path
     name = os.path.basename(name)
     # Remove extensions: matches .fasta, .fa, .fna, .fastq, .fq and optional .gz
@@ -111,7 +163,11 @@ def build_metadata_lookup(input_dataframe, all_fasta_paths):
     """
     dataframe = input_dataframe.copy()
     dataframe.columns = [c.lower() for c in dataframe.columns]
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> final_improvements
     parts_map = {clean_id(path.name).lower(): str(path.absolute()) for path in all_fasta_paths}
 
     for filepath in all_fasta_paths:
@@ -120,7 +176,11 @@ def build_metadata_lookup(input_dataframe, all_fasta_paths):
         for part in re.split(r'[_.-]', name_clean):
             if part and part not in parts_map:
                 parts_map[part] = str(filepath.absolute())
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> final_improvements
     lookup = {}
 
     for _, row in dataframe.iterrows():
@@ -135,7 +195,11 @@ def build_metadata_lookup(input_dataframe, all_fasta_paths):
             'collection_date': str(row.get('collection_date', 'Unknown')),
             'fasta_path': parts_map.get(run_id, parts_map.get(bio_id, "NOT_FOUND"))
         }
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> final_improvements
         for identifier in [run_id, bio_id]:
             if identifier and identifier not in ['nan', '', 'none']:
                 lookup[identifier] = metadata_packet
@@ -147,7 +211,11 @@ def label_subclusters(row, threshold, mode, cluster_id_value):
     """
     is_bc = bool(re.search(r'\bbc\b', str(row.get('Region', '')).lower()))
     cluster_match = str(row.get('cluster_id')) == str(cluster_id_value)
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> final_improvements
     # FLEXIBLE LOGIC: Check direction based on user input
     if mode == 'above':
         threshold_met = row['UMAP-2'] > threshold
@@ -160,8 +228,12 @@ def label_subclusters(row, threshold, mode, cluster_id_value):
 
 def sample_min_max(df, dist_matrix, label, n_samples, seed_value):
     subset_ids = df[df['BC_source'] == label].index.tolist()
+<<<<<<< HEAD
     if len(subset_ids) <= n_samples:
         return subset_ids
+=======
+    if len(subset_ids) <= n_samples: return subset_ids
+>>>>>>> final_improvements
 
     # Start with a random sample
     rng = random.Random(seed_value)
@@ -177,22 +249,37 @@ def sample_min_max(df, dist_matrix, label, n_samples, seed_value):
 
 def map_compound_id(compound_id, identifier_map):
         compound_id = str(compound_id).lower()
+<<<<<<< HEAD
 
         if compound_id in identifier_map:
             return identifier_map[compound_id]
 
+=======
+        
+        if compound_id in identifier_map:
+            return identifier_map[compound_id]
+            
+>>>>>>> final_improvements
         parts = re.split(r'[_.-]', compound_id)
         for part in parts:
             if part in identifier_map:
                 return identifier_map[part]
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> final_improvements
         return {}
 
 def generate_samplesheet(ids, lookup_map, output_name):
     """Produces the 'sample_id,contig' CSV, handling compound IDs."""
     rows = []
     for given_id in ids:
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> final_improvements
         # Try whole ID and then split for compound IDs
         entry = lookup_map.get(given_id.lower())
         if not entry:
@@ -201,6 +288,7 @@ def generate_samplesheet(ids, lookup_map, output_name):
                 if part in lookup_map:
                     entry = lookup_map[part]
                     break
+<<<<<<< HEAD
 
         # If still not found, default to an empty dict to avoid crashes
         entry = entry if entry else {}
@@ -209,6 +297,16 @@ def generate_samplesheet(ids, lookup_map, output_name):
         rows.append({'sample_id': given_id, 'contig': fasta})
 
     pd.DataFrame(rows).to_csv(output_name, index=False, header = ["sample", "contig"])
+=======
+        
+        # If still not found, default to an empty dict to avoid crashes
+        entry = entry if entry else {}
+        fasta = entry.get('fasta_path', 'NOT_FOUND')
+        
+        rows.append({'sample_id': given_id, 'contig': fasta})
+    
+    pd.DataFrame(rows).to_csv(output_name, index=False)
+>>>>>>> final_improvements
     logger.info(f"Samplesheet created: {output_name}")
 
 # ---------------------------------------------------------------------------------------------------
@@ -218,9 +316,15 @@ def generate_samplesheet(ids, lookup_map, output_name):
 def run_agglomerative(dist_matrix, value_threshold):
     """Performs Hierarchical Clustering on a precomputed distance matrix."""
     clusterer = AgglomerativeClustering(
+<<<<<<< HEAD
         n_clusters=None,
         distance_threshold=value_threshold,
         metric='precomputed',
+=======
+        n_clusters=None, 
+        distance_threshold=value_threshold,
+        metric='precomputed', 
+>>>>>>> final_improvements
         linkage='average'
     )
     return clusterer.fit(dist_matrix)
@@ -230,9 +334,15 @@ def run_umap_projection(dist_matrix, n_neighbors, seed):
     safe_neighbors = max(2, min(n_neighbors, len(dist_matrix) - 1))
 
     reducer = umap.UMAP(
+<<<<<<< HEAD
         n_neighbors=safe_neighbors,
         min_dist=0.1,
         metric='precomputed',
+=======
+        n_neighbors=safe_neighbors, 
+        min_dist=0.1, 
+        metric='precomputed', 
+>>>>>>> final_improvements
         random_state=seed
     )
     return reducer.fit_transform(dist_matrix)
@@ -241,6 +351,7 @@ def run_umap_projection(dist_matrix, n_neighbors, seed):
 #       Main functions
 # ---------------------------------------------------------------------------------------------------
 
+<<<<<<< HEAD
 def clustering_and_subsampling(distance_matrix,
                                metadata,
                                agglo_threshold,
@@ -254,6 +365,21 @@ def clustering_and_subsampling(distance_matrix,
                                fasta_extensions,
                                output_prefix):
 
+=======
+def clustering_and_subsampling(distance_matrix, 
+                               metadata, 
+                               agglo_threshold, 
+                               umap_neighbors, 
+                               umap_threshold, 
+                               umap_mode,
+                               seed_value, 
+                               keep, 
+                               agglo_cluster_value,
+                               fasta_dir, 
+                               fasta_extensions, 
+                               output_prefix):
+    
+>>>>>>> final_improvements
     logger.info(f"Importing primary datasets: {distance_matrix} and {metadata}")
     # Import and clean identifiers in distance matrix
     distance_df = pd.read_csv(distance_matrix, sep=',')
@@ -265,15 +391,25 @@ def clustering_and_subsampling(distance_matrix,
     logger.info("Building metadata-identifier lookup maps")
     all_paths = map_fasta_folder(fasta_dir, fasta_extensions)
     agglomerative_df = run_agglomerative(distance_df, agglo_threshold)
+<<<<<<< HEAD
     _cluster_mapping = dict(zip(distance_df.index, agglomerative_df.labels_))
+=======
+    cluster_mapping = dict(zip(distance_df.index, agglomerative_df.labels_))
+>>>>>>> final_improvements
     identifier_map = build_metadata_lookup(metadata_df, all_paths)
 
     # Create results dataframe and add some relevant metadata
     results_df = pd.DataFrame(index=distance_df.index)
     results_df['cluster_id'] = agglomerative_df.labels_
+<<<<<<< HEAD
 
     results_df['metadata_packet'] = results_df.index.map(lambda x: map_compound_id(x, identifier_map))
 
+=======
+ 
+    results_df['metadata_packet'] = results_df.index.map(lambda x: map_compound_id(x, identifier_map))
+    
+>>>>>>> final_improvements
     results_df['Region'] = results_df['metadata_packet'].apply(lambda x: x.get('region', 'unknown'))
     results_df['Host']   = results_df['metadata_packet'].apply(lambda x: x.get('host', 'unknown'))
 
@@ -291,13 +427,21 @@ def clustering_and_subsampling(distance_matrix,
     results_df['BC_source'] = results_df.apply(
         lambda row: label_subclusters(
             row,
+<<<<<<< HEAD
             umap_threshold,
+=======
+            umap_threshold, 
+>>>>>>> final_improvements
             mode=umap_mode,
             cluster_id_value=agglo_cluster_value
             ),
         axis=1
         )
+<<<<<<< HEAD
     other_ids = results_df[results_df['BC_source'] != 'BC_Only'].index.tolist()
+=======
+    other_ids = results_df[results_df['BC_source'] != 'BC_Only'].index.tolist()   
+>>>>>>> final_improvements
     bc_only_pool = results_df[results_df['BC_source'] == 'BC_Only']
     n_to_keep = min(keep, len(bc_only_pool))
 
@@ -306,7 +450,11 @@ def clustering_and_subsampling(distance_matrix,
     logger.info(f"Subsampling summary:\n{counts}")
     counts_cluster = results_df['cluster_id'].value_counts()
     logger.info(f"Subsampling summary:\n{counts_cluster}")
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> final_improvements
     bc_count = results_df['Region'].str.contains('bc').sum()
     logger.info(f"Successfully mapped {bc_count} samples to BC region.")
 
@@ -335,6 +483,7 @@ def clustering_and_subsampling(distance_matrix,
 def main():
     args = parse_args()
     clustering_and_subsampling(
+<<<<<<< HEAD
             args.distance_matrix,
             args.metadata,
             args.threshold_agglomerative,
@@ -346,8 +495,25 @@ def main():
             args.agglo_cluster_value,
             args.fasta_dir,
             args.fasta_extension,
+=======
+            args.distance_matrix, 
+            args.metadata, 
+            args.threshold_agglomerative, 
+            args.neighbors_umap, 
+            args.threshold_umap,
+            args.umap_mode,
+            args.seed, 
+            args.keep,
+            args.agglo_cluster_value,
+            args.fasta_dir, 
+            args.fasta_extension, 
+>>>>>>> final_improvements
             args.output_prefix
         )
 
 if __name__ == "__main__":
     main()
+<<<<<<< HEAD
+=======
+
+>>>>>>> final_improvements

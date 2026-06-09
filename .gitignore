@@ -187,7 +187,10 @@ cython_debug/
 
 # ignore data, but keep directories as placeholders
 input_data/**
+<<<<<<< HEAD
 analysis/**
+=======
+>>>>>>> final_improvements
 output/**
 !input_data/.gitkeep
 !output/.gitkeep
