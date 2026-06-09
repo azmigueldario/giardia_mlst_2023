@@ -1,9 +1,9 @@
 #!/bin/bash
-#SBATCH --mem-per-cpu=6G
-#SBATCH --time=1-20:30:00
+#SBATCH --mem-per-cpu=4G
+#SBATCH --time=20:30:00
 #SBATCH --account=def-whsiao-ab
 #SBATCH --cpus-per-task=8
-#SBATCH --job-name="sra_download_giardia"
+#SBATCH --job-name="sra_download_giardia_pending"
 #SBATCH --chdir=/scratch/mdprieto/
 #SBATCH --output=logs_jobs/giardia_assembly/%x_%j.out
 
@@ -32,7 +32,7 @@ fi
 source "${script_dir}/../../config_paths.sh"
 
 #------------------------------------------------------------------------------------------------------
-#                           SRA tools commands - paired end Illumina reads
+#                           SRA tools commands
 #------------------------------------------------------------------------------------------------------
 
 # Merge all accessions into single file
@@ -52,9 +52,9 @@ while read -r SRR; do
         continue
     fi
 
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ----------------------------------------------------------------------
     # Attempt prefetch with retry
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ----------------------------------------------------------------------
 
     max_attempts=2
     attempt=1
@@ -84,9 +84,9 @@ while read -r SRR; do
         continue
     fi
 
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ----------------------------------------------------------------------
     # Attempt fasterq-dump with retry
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ----------------------------------------------------------------------
 
     echo "Fasterq-dump of ${SRR}"
     max_attempts=2
@@ -123,9 +123,9 @@ while read -r SRR; do
         continue
     fi
 
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ----------------------------------------------------------------------
     # Clean intermediate files and compress raw reads
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ----------------------------------------------------------------------
 
     echo "Cleaning intermediate file and compressing ${SRR}..."
     rm -rf "${scratch_tmp_folder}/sratools_cache/${SRR}"
@@ -135,27 +135,3 @@ while read -r SRR; do
         "${raw_reads_dir}/${SRR}"*.fastq
 
 done < "${accessions_dir}/all_accessions_2025.csv"
-
-#-------------------------------------------------------------------------------------------------------
-#                           Reference genome(s) for Giardia assemblages
-#-------------------------------------------------------------------------------------------------------
-
-mkdir -p "${reference_genome}/assemblage_B"
-mkdir -p "${reference_genome}/assemblage_A"
-
-# Download chromosome level assembly of giardia Duodenalis (Illumina + PacBio)
-curl \
-    --silent \
-    --show-error \
-    --location \
-    --fail \
-    https://ftp.ncbi.nlm.nih.gov/genomes/refseq/protozoa/Giardia_duodenalis/latest_assembly_versions/GCF_000002435.2_UU_WB_2.1/GCF_000002435.2_UU_WB_2.1_genomic.fna.gz \
-    > "${reference_genome}/assemblage_A/GCF_000002435.2_WB_genomic.fna.gz"
-
-curl \
-    --silent \
-    --show-error \
-    --location \
-    --fail \
-    "https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/498/735/GCA_000498735.1_ASM49873v1/GCA_000498735.1_ASM49873v1_genomic.fna.gz" \
-    > "${reference_genome}/assemblage_B/GCA_000498735.1_genomic.fna.gz"

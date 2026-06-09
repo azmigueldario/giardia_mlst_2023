@@ -1,4 +1,4 @@
-# Project: **Giardia _cgMLST_ 2023**
+# Project: **Giardia _cgMLST_ pipeline**
 
 ## Approach
 

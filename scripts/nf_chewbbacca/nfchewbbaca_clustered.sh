@@ -1,25 +1,85 @@
 #!/bin/bash
-#SBATCH --mem-per-cpu=5G
-#SBATCH --time=28:00:00
+#SBATCH --mem=10G
+#SBATCH --time=1-20:00:00
 #SBATCH --cpus-per-task=3
-#SBATCH --job-name="nfchewbbaca_clustered"
+#SBATCH --account=def-whsiao-ab
+#SBATCH --job-name="nf_chewbbacca_random_cluster"
 #SBATCH --chdir=/scratch/mdprieto/
-#SBATCH --output=jobs_output/%j_%x.out
+#SBATCH --mail-user=mprietog@sfu.ca
+#SBATCH --output=logs_jobs/chewbbacca/%j_%x.out
 
-############################################################
+#========================================================================================
+#
+# Core genome MLST pipeline with cross-validation (after clustering)
+#
+#========================================================================================
 
-# Requires apptainer and nextflow
-module load apptainer
-source /project/share/tools/anaconda3/etc/profile.d/conda.sh
-conda activate nf-core-tools
+#----------------------------------------------------------------------------------------
+#                   Source configuration  file
+#----------------------------------------------------------------------------------------
 
-############################################################
+set -euo pipefail
 
-NF_CHEW="/project/60006/mdprieto/nf_chewbacca_mlst"
+script_dir="${SLURM_SUBMIT_DIR}"
+if [[ ! -f "${script_dir}/../../config_paths.sh" ]]; then
+    echo "ERROR: You must cd into the script's directory before running sbatch!"
+    exit 1
+fi
 
-cd ~/scratch/ &&
-    nextflow run $NF_CHEW/main.nf \
-    -resume \
-    -profile singularity \
-    -config /project/60006/mdprieto/nf_chewbacca_mlst/test/eagle.config \
-    -with-trace
+source "${script_dir}/../../config_paths.sh"
+
+#----------------------------------------------------------------------------------------
+#                   Define specific paths and load dependencies
+#----------------------------------------------------------------------------------------
+
+# requires apptainer and nextflow > 23
+module load StdEnv/2023 apptainer/1.3.5 nextflow/25.10.2
+
+# Script specific paths
+random_samplesheet="${processed_data}/nf_chewbbacca_samplesheets/giardia_subsample_random_samplesheet.csv"
+minmax_samplesheet="${processed_data}/nf_chewbbacca_samplesheets/giardia_subsample_minmax_samplesheet.csv"
+nf_config_file="${script_dir}/nf_configs/eagle_chewbbacca.config"
+
+# Define output directories
+outdir_random="${analysis_dir}/nf_chewbbacca/cluster_random_2026"
+outdir_minmax="${analysis_dir}/nf_chewbbacca/cluster_minmax_2026"
+mkdir -p "${outdir_random}" "${outdir_minmax}"
+
+#----------------------------------------------------------------------------------------
+#                   Nextflow commands - Clustered and subset at random
+#----------------------------------------------------------------------------------------
+
+cd /scratch/mdprieto/ &&
+    nextflow run "${nf_chewbbacca_pipeline}/main.nf" \
+        -resume \
+        -profile apptainer,slurm_fir \
+        -config "${nf_config_file}" \
+        --input_samplesheet "${random_samplesheet}" \
+        --outdir "${outdir_random}" \
+        --ref_genome "${reference_genome_A}" \
+        --organism_species "giardia_duodenalis" \
+        --eggnog_db "${eggnog_db_dir}/eggnog.db" \
+        --eggnog_data_dir "${eggnog_db_dir}" \
+        --eggnog_diamond_db "${eggnog_db_dir}/eggnog_proteins.dmnd" \
+        --cgMLST_threshold 90 \
+        --number_splits 10
+
+
+#----------------------------------------------------------------------------------------
+#                   Nextflow commands - Clustered and subset to min-max divergence
+#----------------------------------------------------------------------------------------
+
+cd /scratch/mdprieto/ &&
+    nextflow run "${nf_chewbbacca_pipeline}/main.nf" \
+        -resume \
+        -profile apptainer,slurm_fir \
+        -config "${nf_config_file}" \
+        --input_samplesheet "${minmax_samplesheet}" \
+        --outdir "${outdir_minmax}" \
+        --ref_genome "${reference_genome_A}" \
+        --organism_species "giardia_duodenalis" \
+        --eggnog_db "${eggnog_db_dir}/eggnog.db" \
+        --eggnog_data_dir "${eggnog_db_dir}" \
+        --eggnog_diamond_db "${eggnog_db_dir}/eggnog_proteins.dmnd" \
+        --cgMLST_threshold 90 \
+        --number_splits 10

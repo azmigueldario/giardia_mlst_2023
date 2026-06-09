@@ -1,46 +1,63 @@
 #!/bin/bash
-#SBATCH --mem-per-cpu=5G
-#SBATCH --time=12:00:00
+#SBATCH --mem=20G
+#SBATCH --time=1-20:00:00
 #SBATCH --cpus-per-task=3
-#SBATCH --job-name="nfchewbbaca_full"
+#SBATCH --account=def-whsiao-ab
+#SBATCH --job-name="nf_chewbbacca_full"
 #SBATCH --chdir=/scratch/mdprieto/
-#SBATCH --output=jobs_output/giardia_chewbbaca/%j_%x.out
+#SBATCH --mail-user=mprietog@sfu.ca
+#SBATCH --output=logs_jobs/chewbbacca/%j_%x.out
 
-##############################################################################################
-#                           Dependencies
-##############################################################################################
+#========================================================================================
+#
+# Core genome MLST pipeline with cross-validation (selected HQ assemblies)
+#
+#========================================================================================
 
-# set dependencies
-module load StdEnv/2023 nextflow/25.10.2 apptainer/1.4.5
+#----------------------------------------------------------------------------------------
+#                   Determine script directory (SLURM or local)
+#----------------------------------------------------------------------------------------
 
-# paths
-giardia_project_repo="/project/60006/mdprieto/giardia_mlst_2023"
-input_samplesheet="${giardia_project_repo}/processed_data/nf_chewbbaca_samplesheets/hq_samplesheet_2025.csv"
-nf_config_file="${giardia_project_repo}/scripts/nf_chewbbaca/nf_configs/eagle_chewbbaca.config"
-outdir="/home/mdprieto/scratch/results/nf_chewbbaca_full_feb2026"
+set -euo pipefail
+if [[ -n "${SLURM_SUBMIT_DIR:-}" ]]; then
+    script_dir="${SLURM_SUBMIT_DIR}"
+else
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+fi
 
-# set manually
-nf_chewbbaca_repo="/home/mdprieto/mdp_projects/nf_chewbacca_mlst"
-ref_genome_path="/mnt/cidgoh-object-storage/database/reference_genomes/giardia/assemblage_A/Giardia_GCF000002435_WB_genomic.fna"
+#----------------------------------------------------------------------------------------
+#                   Define paths and load dependencies
+#----------------------------------------------------------------------------------------
 
-##############################################################################################
+# requires apptainer and nextflow > 23
+module load StdEnv/2023 apptainer/1.3.5 nextflow/25.10.2
+
+# Import major paths from config files
+source "${script_dir}/../../config_paths.sh"
+
+# Script specific paths
+hq_input_samplesheet="${processed_data}/nf_chewbbacca_samplesheets/hq_samplesheet_2025.csv"
+nf_config_file="${script_dir}/nf_configs/eagle_chewbbacca.config"
+
+# Define output directory
+outdir="${analysis_dir}/nf_chewbbacca/full_2026"
+mkdir -p "${outdir}"
+
+#----------------------------------------------------------------------------------------
 #                           Nextflow commands
-##############################################################################################
+#----------------------------------------------------------------------------------------
 
-# nextflow run
-nextflow run $nf_chewbbaca_repo/main.nf \
-    -resume \
-    -profile singularity,slurm \
-    -config ${nf_config_file} \
-    --input_samplesheet $input_samplesheet \
-    --outdir ${outdir} \
-    --ref_genome ${ref_genome_path} \
-    --organism_species "giardia_duodenalis" \
-    --eggnog_db "/scratch/group_share/databases/eggnog/eggnog.db" \
-    --eggnog_data_dir "/scratch/group_share/databases/eggnog" \
-    --eggnog_diamond_db "/scratch/group_share/databases/eggnog/eggnog_proteins.dmnd" \
-    --cgMLST_threshold 70
-
-##############################################################################################
-#                           Clean-up
-##############################################################################################
+cd /scratch/mdprieto/ &&
+    nextflow run "${nf_chewbbacca_pipeline}/main.nf" \
+        -resume \
+        -profile apptainer,slurm_fir \
+        -config "${nf_config_file}" \
+        --input_samplesheet "${hq_input_samplesheet}" \
+        --outdir "${outdir}" \
+        --ref_genome ${reference_genome_A} \
+        --organism_species "giardia_duodenalis" \
+        --eggnog_db "${eggnog_db_dir}/eggnog.db" \
+        --eggnog_data_dir "${eggnog_db_dir}" \
+        --eggnog_diamond_db "${eggnog_db_dir}/eggnog_proteins.dmnd" \
+        --cgMLST_threshold 90 \
+        --number_splits 10
