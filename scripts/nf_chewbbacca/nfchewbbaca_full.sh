@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --mem=20G
+#SBATCH --mem=10G
 #SBATCH --time=1-20:00:00
-#SBATCH --cpus-per-task=3
+#SBATCH --cpus-per-task=2
 #SBATCH --account=def-whsiao-ab
 #SBATCH --job-name="nf_chewbbacca_full"
 #SBATCH --chdir=/scratch/mdprieto/
@@ -54,7 +54,7 @@ cd /scratch/mdprieto/ &&
         -config "${nf_config_file}" \
         --input_samplesheet "${hq_input_samplesheet}" \
         --outdir "${outdir}" \
-        --ref_genome ${reference_genome_A} \
+        --ref_genome ${assemblage_A_fasta} \
         --organism_species "giardia_duodenalis" \
         --eggnog_db "${eggnog_db_dir}/eggnog.db" \
         --eggnog_data_dir "${eggnog_db_dir}" \

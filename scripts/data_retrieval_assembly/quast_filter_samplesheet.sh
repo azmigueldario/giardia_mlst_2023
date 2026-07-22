@@ -115,7 +115,7 @@ temp_list="$(mktemp)"
 cut \
     --fields=2 \
     --delimiter=, \
-     "${processed_data}/nf_chewbbaca_samplesheets/hq_samplesheet_2025.csv" |
+    "${processed_data}/nf_chewbbaca_samplesheets/hq_samplesheet_2025.csv" |
 grep "fna.gz$" \
     > "${temp_list}"
 

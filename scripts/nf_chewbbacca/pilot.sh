@@ -1,14 +1,16 @@
 #!/bin/bash
 #SBATCH --mem=10G
-#SBATCH --time=6:00:00
+#SBATCH --time=9:00:00
 #SBATCH --cpus-per-task=3
 #SBATCH --account=def-whsiao-ab
-#SBATCH --job-name="nf_chewbbacca_new_version"
+#SBATCH --job-name="nf_chewbbacca_pilot_jun24"
 #SBATCH --chdir=/scratch/mdprieto/
 #SBATCH --mail-user=mprietog@sfu.ca
 #SBATCH --output=logs_jobs/chewbbacca/%j_%x.out
 
-#!/bin/bash
+#----------------------------------------------------------------------------------------
+#                           Dependencies and set up
+#----------------------------------------------------------------------------------------
 
 # requires apptainer and nextflow > 23
 module load StdEnv/2023 apptainer/1.3.5 nextflow/25.10.2
@@ -28,20 +30,24 @@ mkdir -p "${outdir}"
 #----------------------------------------------------------------------------------------
 #                           Nextflow commands
 #----------------------------------------------------------------------------------------
+
 tmp_samplesheet="/scratch/mdprieto/tmp_samplesheet.csv"
-head -n 5 "${hq_input_samplesheet}" > "$tmp_samplesheet"
+head -n 10 "${hq_input_samplesheet}" > "$tmp_samplesheet"
 
 cd /scratch/mdprieto/ &&
     nextflow run "${nf_chewbbacca_pipeline}/main.nf" \
         -resume \
         -profile apptainer,slurm_fir \
+        -w "${nf_work_dir}" \
         -config "${nf_config_file}" \
-        --input_samplesheet "$tmp_samplesheet" \
+        --input_samplesheet "${tmp_samplesheet}" \
         --outdir "${outdir}" \
-        --ref_genome ${reference_genome_A} \
+        --ref_genome "${assemblage_A_fasta}" \
         --organism_species "giardia_duodenalis" \
         --eggnog_db "${eggnog_db_dir}/eggnog.db" \
         --eggnog_data_dir "${eggnog_db_dir}" \
         --eggnog_diamond_db "${eggnog_db_dir}/eggnog_proteins.dmnd" \
         --cgMLST_threshold 70 \
-        --number_splits 2
+        --number_splits 3 \
+        --publish_set_data
+
