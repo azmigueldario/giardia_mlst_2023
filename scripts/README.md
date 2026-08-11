@@ -1,36 +1,39 @@
 # Scripts directory 
 
-# Step 1 - Download and pre-process dataset
+## Preparation
 
-1. `./data_retrieval_assembly/download_data_repositories.sh`: Uses nf-core fetchngs and curl to download reference genome and all available NGS data in the INSDC for Giardia duodenalis assemblages A and B
+The root folder of the **repository** as well as the necessary path(s) to container(s) and dependencies shouuld be modified in the `../config_paths.sh` file
 
-2. `./data_retrieval_assembly/assembly_and_qc.sh`:  Runs bactopia/bactopia 3.0 pipeline for all accessions with short-read data. As _Giardia spp._ genome is mostly redundant across chromosomes, we can use bacterial sequencing assembly tools
+All the scripts are dependent on the configuration file. 
 
-3. `./data_retrieval_assembly/hybrid_assembly.sh`: For accessions with short and long sequencing reads, we perform hybrid assembly in Bactopia 3.0
+## Step 1 - Download data and pre-process reads
 
+1. `./00_data_download_script.sh`: ideally run in a persistent window (`nohup` or `tmux`), uses the SRA toolkit to download all reads and reference genomes into subfolders of the repository
 
+2. `./01_assembly_and_qc.sh`:  runs bactopia/bactopia 3.0 pipeline for all accessions (separately for Illumina and hybrid assemblies) with short-read data. We apply bacterial assembly tools as _Giardia duodenalis_ genome is mostly redundant across chromosomes.
 
-# Step 2 - QC of assembly, clustering, and selecting representative samples
+3. `./02_coverm_assemblages.sh`: classifies the reads as either assemblage A, assemblage B, or unknown (mostly because of limited mapping) using competitive mapping against the reference genomes of the assemblages
 
-This step is dependent on the `sci-kit` package for python. 
+## Step 2 - Filtering and parsing assemblies
 
-    - The runtime environment can be reproduced by creating a conda environment using the dependencies listed in `./clustering_tsne/tsne_environment.yml`
-    - Alternatively, a python `virtual environment` for this step can be created with the dependencies in `./clustering_tsne/tsne_requirements.txt`
-    - The jupyter notebook contained in this folder (`./clustering_tsne/tsne_notebook.ipynb`) can be helpful to select the optimal hyperparameters for HDBSCAN clustering.
+- This step is dependent on python machine learning tools like `sci-kit`. You can reproduce the **virtual environment** with the dependencies in `./configs/env_recipes/tsne_requirements.txt`. Once the `venv` is created, specify its path in the primary configuration file (`../config_paths.sh`).
 
-1. The master script `./clustering_tsne/clustering_selection_genomes.sh` performs all the processes in this directory:
+    - The jupyter notebook contained in the bin folder [`bin/bc_diversity_impact.ipynb`] helps select the optimal dataset-specific hyperparameters for HDBSCAN clustering.
 
-    - Runs `QUAST` for all assemblies resulting from Bactopia
-    - Selects high quality genomes based on user-defined parameters
-    - Analyzes mash distances among the dataset using `sourmash`
-    - Performs clustering and subsampling with `t-SNE` and `HDBSCAN`
-    - Creates samplesheets using random subsampling and min-max divergence with user-defined parameters
+1. `./03_quast_sourmash_tsne.sh`: it first selects high quality assemblies based on QUAST output (N50>30000, n_contigs<1500, and Total_length between 9000000 & 15000000). Then, creates a sketch of the genomes and calculates mash distances using `sourmash`. The distance matris is used for clustering and subsampling with `t-SNE` and `HDBSCAN`. Finally, it creates samplesheets to perform sensitivity analyses during the schema definition step.
 
-# Step 3 - nextflow chewbbacca pipeline
+## Step 4 - Gene by gene schema definition
 
-These scripts perform gene-by-gene schema definition for the original samplesheet with all assemblies that passed QC, and for the sensitivity analysis using a subset of all available assemblies
+1. `./04_classic_schema_analysis.sh`: as a baseline comparison, we annotate two classic MLST schemas for this parasite (six and three loci respectively) and create phylogenetic trees out of them using multiple sequence alignment as input for `IQTREE`
+2. `./05_nfchewbbaca_full.sh`: runs the chewBBACA pipeline with cross-validation for all assemblies that passed QUAST quality control filters
+3. `./06_nfchewbbaca_clustered.sh`: runs the sensitivity analyses of the chewBBACA pipeline, using subsets that aim to minimize the weight of isolates from BC
 
-1. `./nf_chewbbacca/nfchewbbaca_full.sh`: runs the pipeline for all assemblies that passed QC
-2. `./nf_chewbbacca/nfchewbbaca_clustered.sh`: runs the pipeline for a subset of assemblies selected at random from clusters with high genomic similarity. Then it runs the same pipeline with assemblies selected after clustering to maximize divergence in the data.
+## Step 5 - Downstream analysis
 
-# Step 4 - Verify alignment to reference assemblages (coverM)
+1. `07_interpro_annotation.sh`: conducts annotation of all loci identified in the chewBBACA pipeline for the HQ assemblies as a sanity-check that we are actually identifying previously described giardia proteins
+
+## Helper scripts in bin folder
+
+1. `mlst2dist.py`: chewBBACA companion script to produce table of allelic distances from the tool output.
+2. `get_metadata_giardia.py`: companion snippets to obtain sample metadata for all accessions in data set.
+2. `quast_analysis.R`: R script to import, clean, and produce summary of assembly QC.

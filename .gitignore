@@ -186,11 +186,11 @@ cython_debug/
 *.fna.sig
 
 # ignore data, but keep directories as placeholders
-input_data/**
-<<<<<<< HEAD
+input_data/classic_schemas/**
+input_data/annotation_reference/**
+input_data/raw_fastq/**
+input_data/reference_genome/**
 analysis/**
-=======
->>>>>>> final_improvements
 output/**
 !input_data/.gitkeep
 !output/.gitkeep

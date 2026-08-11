@@ -1,73 +1,45 @@
 #!/usr/bin/env bash
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 #                                                                               #
 #       PIPELINE CONFIGURATION                                                  #
 #           Centralized paths and environment variables for the poject.         #
 #           Use with `source path/to/config_paths.sh`                           #
 #                                                                               #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
-
-# =============================================================================
-# Auto export and evaluate run environment
-# =============================================================================
-
+# Start auto-export for all defined paths
 set -a
 
-current_host=$(hostname)
-drac_cluster="${CC_CLUSTER:-unknown}"
+# =============================================================================
+# Manual paths
+# =============================================================================
 
-    # -------------------------------------------------------------------------
-    # Eagle cluster (lab)
-    # -------------------------------------------------------------------------
+# Repo and computing environment root paths
+project_root="/scratch/mdprieto/repositories/giardia_mlst_2023"
+scratch_tmp_folder="/scratch/mdprieto/cache"
+nf_chewbbaca_pipeline="/scratch/mdprieto/repositories/nf_chewbbaca_mlst"
+nf_work_dir="/scratch/mdprieto/cache/nf_work_cache/"
 
-if [[ "$current_host" == *"eagle"* || "$current_host" =~ ^node[0-9]+ ]]; then
+# Database paths
+eggnog_db_dir="/project/6007413/cidgoh_share/database/eagle/eggnog"
+kraken2_db="/project/6007413/cidgoh_share/database/eagle/Kraken2_bracken_db/kraken2_standard_20250402"
+giardiadb_proteome="/scratch/mdprieto/repositories/giardia_mlst_2023/input_data/GiardiaDB-71_GintestinalisAssemblageAWB2019_AnnotatedProteins.fasta"
 
-    # MANUAL: define Eagle-specific root paths
-    project_root="/project/60006/mdprieto/giardia_mlst_2023"
-    scratch_tmp_folder="/scratch/mdprieto/cache"
+# Container images paths
+coverm_container="/project/6007413/cidgoh_share/singularity_imgs/coverm-0.7.0--hcb7b614_4.img"
+sra_tools_container="/project/6007413/cidgoh_share/singularity_imgs/sra-tools-3.2.1--h4304569_1.img"
+kraken2_container="/project/6007413/cidgoh_share/singularity_imgs/community.wave.seqera.io-library-kraken2_coreutils_pigz-45764814c4bb5bf3.img"
+krakentools_container="/project/6007413/cidgoh_share/singularity_imgs/depot.galaxyproject.org-singularity-krakentools-1.2--pyh5e36f6f_0.img"
+quast_container="/project/6007413/cidgoh_share/singularity_imgs/quast-5.0.2--py37pl526hb5aa323_2.img"
+sourmash_container="/project/6007413/cidgoh_share/singularity_imgs/sourmash-4.8.9--hdfd78af_0.img"
+chewbbaca_container="/project/6007413/cidgoh_share/singularity_imgs/depot.galaxyproject.org-singularity-chewbbaca-3.5.4--pyh106432d_0.img"
+seqkit_container="/project/6007413/cidgoh_share/singularity_imgs/seqkit-2.13.0--he881be0_0.img"
+iqtree_container="/project/6007413/cidgoh_share/singularity_imgs/iqtree-3.1.2--h8471819_0.img"
+interproscan_container="/project/6007413/cidgoh_share/singularity_imgs/interproscan-5.59.91.0--hec16e2b_1.img"
 
-    # MANUAL: container path(s)
-    sra_tools_container="/scratch/group_share/singularity_imgs/depot.galaxyproject.org-singularity-sra-tools-3.2.1--h4304569_1.sif"
-
-    # -------------------------------------------------------------------------
-    # DRAC HPC
-    # -------------------------------------------------------------------------
-
-elif [[ "$drac_cluster" == "fir" || "$current_host" == *"fir"* || "$current_host" =~ ^fc[0-9]+ ]]; then
-
-    # MANUAL: define Fir-specific root paths
-    project_root="/scratch/mdprieto/repositories/giardia_mlst_2023"
-    scratch_tmp_folder="/scratch/mdprieto/cache"
-    nf_chewbbacca_pipeline="/scratch/mdprieto/repositories/nf_chewbbaca_mlst"
-    nf_work_dir="/scratch/mdprieto/cache/nf_work_cache/"
-
-    # MANUAL: databases
-    eggnog_db_dir="/project/6007413/cidgoh_share/database/eagle/eggnog"
-    kraken2_db="/project/6007413/cidgoh_share/database/eagle/Kraken2_bracken_db/kraken2_standard_20250402"
-
-    # MANUAL: container path(s)
-    coverm_container="/project/6007413/cidgoh_share/singularity_imgs/coverm-0.7.0--hcb7b614_4.img"
-    sra_tools_container="/project/6007413/cidgoh_share/singularity_imgs/sra-tools-3.2.1--h4304569_1.img"
-    kraken2_container="/project/6007413/cidgoh_share/singularity_imgs/community.wave.seqera.io-library-kraken2_coreutils_pigz-45764814c4bb5bf3.img"
-    krakentools_container="/project/6007413/cidgoh_share/singularity_imgs/depot.galaxyproject.org-singularity-krakentools-1.2--pyh5e36f6f_0.img"
-    quast_container="/project/6007413/cidgoh_share/singularity_imgs/quast-5.0.2--py37pl526hb5aa323_2.img"
-    sourmash_container="/project/6007413/cidgoh_share/singularity_imgs/sourmash-4.8.9--hdfd78af_0.img"
-
-    # MANUAL: python environment for clustering
-    clustering_env="/home/mdprieto/virtual_envs/tsne_env2/"
-
-    # -------------------------------------------------------------------------
-    # Fail if unknown
-    # -------------------------------------------------------------------------
-
-else
-    echo "ERROR: Unknown computing environment. Host: ${current_host}, CC_CLUSTER: ${drac_cluster}"
-    exit 1
-fi
+# Python environments
+clustering_env="/home/mdprieto/virtual_envs/tsne_env/"
 
 # =============================================================================
 # Automated sub-paths generation
@@ -83,12 +55,10 @@ analysis_dir="${project_root}/analysis"
 # Other paths
 raw_reads_dir="${input_dir}/raw_fastq"
 reference_genome_dir="${input_dir}/reference_genome"
-assemblage_A_fasta="${reference_genome_dir}/assemblage_A/GCF_000002435.2_WB_genomic.fna.gz"
+nextflow_samplesheets="${processed_data}/nf_chewbbaca_samplesheets"
+assemblage_a_fasta="${reference_genome_dir}/assemblage_A/GCF_000002435.2_WB_genomic.fna.gz"
 accessions_dir="${processed_data}/accessions"
 bactopia_results="${project_outdir}/bactopia_giardia_2025"
 
-    # -------------------------------------------------------------------------
-    # Kill auto-export
-    # -------------------------------------------------------------------------
-
+# Kill auto-export
 set +a

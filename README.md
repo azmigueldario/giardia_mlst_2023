@@ -16,6 +16,10 @@
 
 Secondary data analysis of Giardia intestinalis assembles A and B (parasites of human interest) to produce a core-genome multi-locus sequence typing (MLST) schema. The sequencing files were obtained through a comprehensive search of the INSDC in November 2024 (`PRJNA561185`, `PRJNA280606` and `PRJEB3213`) and an update in December 2025 (`PRJNA1110996`)
 
+### Necessary reference databases
+
+1. GiardiaDB annotated proteome `GiardiaDB-71_GintestinalisAssemblageAWB2019_AnnotatedProteins.fasta` or newer version, which can be manually downloaded after registering to GiardiaDB
+
 ## Repository organization
 
 Every analysis folder contains, if applicable, a `README.md` file and instructions to reproduce the computing environment. 
