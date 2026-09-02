@@ -199,6 +199,8 @@ output/**
 
 # Ignore samplesheets
 *.csv
+!input_data/metadata/*
+!processed_data/metadata/*.csv
 
 #---------------------------------------------------------------
 #                       R and R-studio
